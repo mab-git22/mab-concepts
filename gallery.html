@@ -3,29 +3,82 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Design Showcase</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<title>Portfolio Showcase</title>
+
+<!--
+  ============ CUSTOM FONTS: MONA SANS DISPLAY ============
+  Each static weight is its own file, so each gets its own @font-face
+  rule sharing the same font-family name. The browser picks the right
+  file automatically based on the font-weight you set elsewhere.
+-->
+<style>
+  @font-face {
+    font-family: 'Mona Sans Display';
+    src: url('/fonts/MonaSansDisplay-Regular.woff2') format('woff2');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: 'Mona Sans Display';
+    src: url('/fonts/MonaSansDisplay-Medium.woff2') format('woff2');
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: 'Mona Sans Display';
+    src: url('/fonts/MonaSansDisplay-Bold.woff2') format('woff2');
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: 'Mona Sans Display';
+    src: url('/fonts/MonaSansDisplay-ExtraBold.woff2') format('woff2');
+    font-weight: 800;
+    font-style: normal;
+    font-display: swap;
+  }
+</style>
+
 <style>
   :root{
-    --ink:#1B1D23;
-    --ink-soft:#5B5F6B;
-    --line:#E4E2DC;
-    --card:#FFFFFF;
-    --card-2:#F4F2ED;
-    --sea:#2E6E62;
-    --sea-light:#E4EFEC;
-    --clay:#C9683F;
+    /* ============ YOUR BRAND COLORS ============ */
+    --c-red:#ce0000;      /* Color 1 — primary accent: active tab, hover states, active dot */
+    --c-cyan:#2cc4fc;     /* Color 2 — secondary accent: eyebrow label background */
+    --c-ink:#1f1f1f;      /* Color 3 — text, arrows, borders, eyebrow label text */
+    --c-white:#ffffff;    /* Color 4 — card + page surfaces */
+
+    /* Derived tones (kept for contrast/readability, not new colors) */
+    --c-ink-soft:rgba(31,31,31,.62);  /* body copy, softer than pure ink */
+    --c-line:rgba(31,31,31,.14);      /* hairline borders */
+    --c-tabs-bg:rgba(31,31,31,.06);   /* pill tray behind the tabs */
+
+    /* ============ YOUR FONTS — EDIT FREELY ============ */
+    /* Fall back to system fonts until your real files are uploaded and
+       the @font-face blocks above point to them. Once ready, change the
+       first name in each stack to match your @font-face font-family. */
+    --font-heading:'Mona Sans Display', 'Helvetica Neue', Arial, sans-serif;
+    --font-body:'Mona Sans Display', 'Helvetica Neue', Arial, sans-serif;
+
+    --tab-size:13px;      --tab-tracking:.06em;  --tab-leading:1;      --tab-weight:700;
+    --kicker-size:10.5px; --kicker-tracking:.09em; --kicker-leading:1; --kicker-weight:500;
+    --title-size:16px;    --title-tracking:0;    --title-leading:1.3;   --title-weight:800;
+    --body-size:13.5px;   --body-tracking:0;     --body-leading:1.6;
+
     --radius:14px;
+
+    /* number of grid columns per slide — change here if needed */
+    --cols:2;
   }
   *{box-sizing:border-box;}
   html,body{
     margin:0;
     padding:0;
     background:transparent !important;
-    font-family:'Inter',sans-serif;
-    color:var(--ink);
+    font-family:var(--font-body);
+    color:var(--c-ink);
     -webkit-font-smoothing:antialiased;
   }
   body{
@@ -41,7 +94,7 @@
   .tabs{
     display:flex;
     gap:8px;
-    background:var(--card-2);
+    background:var(--c-tabs-bg);
     padding:6px;
     border-radius:999px;
     margin-bottom:34px;
@@ -51,22 +104,23 @@
   .tab{
     border:none;
     background:transparent;
-    font-family:'Space Grotesk',sans-serif;
-    font-weight:600;
-    font-size:13px;
-    letter-spacing:.06em;
+    font-family:var(--font-heading);
+    font-weight:var(--tab-weight);
+    font-size:var(--tab-size);
+    letter-spacing:var(--tab-tracking);
+    line-height:var(--tab-leading);
     text-transform:uppercase;
-    color:var(--ink-soft);
+    color:var(--c-ink);
     padding:10px 22px;
     border-radius:999px;
     cursor:pointer;
     transition:background .25s ease, color .25s ease;
     white-space:nowrap;
   }
-  .tab:hover{ color:var(--ink); }
+  .tab:hover{ color:var(--c-red); }
   .tab.active{
-    background:var(--ink);
-    color:#fff;
+    background:var(--c-red);
+    color:var(--c-white);
   }
 
   /* ---------- Stage ---------- */
@@ -75,8 +129,13 @@
     max-width:1160px;
     position:relative;
   }
-  .panel{ display:none; }
+  .panel{
+    display:none;
+    opacity:0;
+    transition:opacity .4s ease;
+  }
   .panel.active{ display:block; }
+  .panel.visible{ opacity:1; }
 
   .slide-viewport{
     overflow:hidden;
@@ -84,31 +143,32 @@
   }
   .slide-track{
     display:flex;
-    transition:transform .45s cubic-bezier(.65,0,.35,1);
+    transition:transform .9s cubic-bezier(.65,0,.35,1);
   }
   .slide{
     flex:0 0 100%;
     display:grid;
-    grid-template-columns:repeat(4,1fr);
+    grid-template-columns:repeat(var(--cols),1fr);
     gap:22px;
     padding:2px;
   }
 
   .card{
-    background:var(--card);
-    border:1px solid var(--line);
+    background:var(--c-white);
+    border:1px solid var(--c-line);
     border-radius:var(--radius);
     overflow:hidden;
     display:flex;
     flex-direction:column;
     height:100%;
+    transition:transform .3s ease, box-shadow .3s ease;
   }
   .card .thumb{
     aspect-ratio:4/3;
     width:100%;
     display:block;
     object-fit:cover;
-    background:var(--card-2);
+    background:var(--c-tabs-bg);
   }
   .card .body{
     padding:16px 16px 20px;
@@ -118,24 +178,34 @@
     flex:1;
   }
   .card .kicker{
-    font-size:10.5px;
-    letter-spacing:.09em;
+    display:inline-block;
+    font-family:var(--font-body);
+    font-size:var(--kicker-size);
+    letter-spacing:var(--kicker-tracking);
+    line-height:var(--kicker-leading);
     text-transform:uppercase;
-    font-weight:600;
-    color:var(--sea);
+    font-weight:var(--kicker-weight);
+    color:var(--c-ink);
+    background:var(--c-cyan);
+    padding:4px 10px;
+    border-radius:6px;
+    width:fit-content;
   }
   .card h3{
-    font-family:'Space Grotesk',sans-serif;
-    font-size:15.5px;
-    font-weight:600;
+    font-family:var(--font-heading);
+    font-size:var(--title-size);
+    font-weight:var(--title-weight);
+    letter-spacing:var(--title-tracking);
+    line-height:var(--title-leading);
     margin:0;
-    line-height:1.3;
-    color:var(--ink);
+    color:var(--c-ink);
   }
   .card p{
-    font-size:12.5px;
-    line-height:1.55;
-    color:var(--ink-soft);
+    font-family:var(--font-body);
+    font-size:var(--body-size);
+    letter-spacing:var(--body-tracking);
+    line-height:var(--body-leading);
+    color:var(--c-ink-soft);
     margin:0;
   }
 
@@ -144,25 +214,26 @@
     position:absolute;
     top:50%;
     transform:translateY(-50%);
-    width:42px;
-    height:42px;
+    width:52px;
+    height:52px;
     border-radius:50%;
-    border:1px solid var(--line);
-    background:#fff;
-    color:var(--ink);
-    font-size:18px;
+    border:none;
+    background:var(--c-ink);
+    color:var(--c-white);
     display:flex;
     align-items:center;
     justify-content:center;
     cursor:pointer;
     z-index:5;
-    transition:background .2s ease, border-color .2s ease, opacity .2s ease;
+    transition:background .2s ease, transform .2s ease;
   }
-  .nav-btn:hover{ background:var(--card-2); border-color:var(--ink-soft); }
-  .nav-btn.prev{ left:-21px; }
-  .nav-btn.next{ right:-21px; }
-  .nav-btn[disabled]{ opacity:.3; cursor:default; }
-  .nav-btn[disabled]:hover{ background:#fff; border-color:var(--line); }
+  .nav-btn svg{ width:22px; height:22px; }
+  .nav-btn:hover{ background:var(--c-red); transform:translateY(-50%) scale(1.06); }
+  .nav-btn:active{ transform:translateY(-50%) scale(.96); }
+  .nav-btn.prev{ left:-26px; }
+  .nav-btn.next{ right:-26px; }
+  .nav-btn[disabled]{ opacity:.28; cursor:default; }
+  .nav-btn[disabled]:hover{ background:var(--c-ink); transform:translateY(-50%); }
 
   /* ---------- Dots ---------- */
   .dots{
@@ -175,25 +246,26 @@
     width:7px;
     height:7px;
     border-radius:50%;
-    background:var(--line);
+    background:var(--c-line);
     border:none;
     cursor:pointer;
     padding:0;
+    transition:background .2s ease, width .2s ease;
   }
-  .dot.active{ background:var(--sea); width:20px; border-radius:4px; }
+  .dot.active{ background:var(--c-red); width:20px; border-radius:4px; }
 
   /* ---------- Responsive ---------- */
   @media (max-width: 980px){
-    .slide{ grid-template-columns:repeat(2,1fr); }
-    .nav-btn.prev{ left:0; }
-    .nav-btn.next{ right:0; }
-    .stage{ padding:0 46px; }
+    .stage{ padding:0 50px; }
   }
   @media (max-width: 560px){
     .slide{ grid-template-columns:1fr; gap:16px; }
     .tabs{ width:100%; }
     .tab{ flex:1; padding:10px 10px; font-size:11.5px; }
     body{ padding:20px 12px 32px; }
+    .nav-btn{ width:44px; height:44px; }
+    .nav-btn.prev{ left:-14px; }
+    .nav-btn.next{ right:-14px; }
   }
 </style>
 </head>
@@ -206,10 +278,14 @@
 </div>
 
 <div class="stage">
-  <button class="nav-btn prev" aria-label="Previous">&#8249;</button>
-  <button class="nav-btn next" aria-label="Next">&#8250;</button>
+  <button class="nav-btn prev" aria-label="Previous">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+  </button>
+  <button class="nav-btn next" aria-label="Next">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+  </button>
 
-  <div id="panel-all" class="panel active">
+  <div id="panel-all" class="panel active visible">
     <div class="slide-viewport"><div class="slide-track"></div></div>
     <div class="dots"></div>
   </div>
@@ -228,33 +304,29 @@
    REPLACE the image src, title and paragraph text below with your
    own content. "img" accepts any image URL (upload your images
    somewhere and paste the link here).
+
+   Funnel Designs and Web Designs are locked to exactly 2 slides
+   each (2 items per slide x 2 slides = 4 items). If you add or
+   remove items, keep each list at 4 items to stay at 2 slides.
 --------------------------------------------------------------- */
 const FUNNEL_ITEMS = [
-  { img:"https://placehold.co/480x360/2E6E62/FFFFFF?text=Funnel+01", kicker:"Funnel design", title:"SaaS free trial funnel", text:"A 3-step signup flow built to convert cold traffic into activated trial users." },
-  { img:"https://placehold.co/480x360/2E6E62/FFFFFF?text=Funnel+02", kicker:"Funnel design", title:"Webinar registration funnel", text:"Landing, confirmation and replay pages designed to maximize show-up rate." },
-  { img:"https://placehold.co/480x360/2E6E62/FFFFFF?text=Funnel+03", kicker:"Funnel design", title:"Lead magnet opt-in funnel", text:"A simple opt-in page paired with a thank-you upsell for list growth." },
-  { img:"https://placehold.co/480x360/2E6E62/FFFFFF?text=Funnel+04", kicker:"Funnel design", title:"Coaching application funnel", text:"Application-style funnel that pre-qualifies leads before a sales call." },
-  { img:"https://placehold.co/480x360/2E6E62/FFFFFF?text=Funnel+05", kicker:"Funnel design", title:"Product launch funnel", text:"Countdown-driven launch sequence with cart, upsell and downsell pages." },
-  { img:"https://placehold.co/480x360/2E6E62/FFFFFF?text=Funnel+06", kicker:"Funnel design", title:"Digital course funnel", text:"Sales page, checkout and order bump flow for a self-paced online course." },
-  { img:"https://placehold.co/480x360/2E6E62/FFFFFF?text=Funnel+07", kicker:"Funnel design", title:"Membership funnel", text:"Recurring membership funnel with tiered pricing and a retention offer." },
-  { img:"https://placehold.co/480x360/2E6E62/FFFFFF?text=Funnel+08", kicker:"Funnel design", title:"Consultation booking funnel", text:"Calendar-integrated booking funnel for service-based businesses." }
+  { img:"https://placehold.co/480x360/1f1f1f/FFFFFF?text=Funnel+01", kicker:"Funnel design", title:"SaaS free trial funnel", text:"A 3-step signup flow built to convert cold traffic into activated trial users." },
+  { img:"https://placehold.co/480x360/1f1f1f/FFFFFF?text=Funnel+02", kicker:"Funnel design", title:"Webinar registration funnel", text:"Landing, confirmation and replay pages designed to maximize show-up rate." },
+  { img:"https://placehold.co/480x360/1f1f1f/FFFFFF?text=Funnel+03", kicker:"Funnel design", title:"Lead magnet opt-in funnel", text:"A simple opt-in page paired with a thank-you upsell for list growth." },
+  { img:"https://placehold.co/480x360/1f1f1f/FFFFFF?text=Funnel+04", kicker:"Funnel design", title:"Coaching application funnel", text:"Application-style funnel that pre-qualifies leads before a sales call." }
 ];
 
 const WEB_ITEMS = [
-  { img:"https://placehold.co/480x360/C9683F/FFFFFF?text=Web+01", kicker:"Web design", title:"Personal portfolio site", text:"A minimal one-page portfolio built to showcase case studies and clients." },
-  { img:"https://placehold.co/480x360/C9683F/FFFFFF?text=Web+02", kicker:"Web design", title:"E-commerce storefront", text:"Full storefront layout with collection grid, product page and cart drawer." },
-  { img:"https://placehold.co/480x360/C9683F/FFFFFF?text=Web+03", kicker:"Web design", title:"Local business website", text:"Service pages, booking widget and testimonials for a local business." },
-  { img:"https://placehold.co/480x360/C9683F/FFFFFF?text=Web+04", kicker:"Web design", title:"SaaS marketing site", text:"Feature-led marketing site with pricing table and integrations page." },
-  { img:"https://placehold.co/480x360/C9683F/FFFFFF?text=Web+05", kicker:"Web design", title:"Blog and newsletter site", text:"Editorial layout optimized for readability and newsletter sign-ups." },
-  { img:"https://placehold.co/480x360/C9683F/FFFFFF?text=Web+06", kicker:"Web design", title:"Nonprofit organization site", text:"Donation-first layout with impact stats and volunteer sign-up flow." },
-  { img:"https://placehold.co/480x360/C9683F/FFFFFF?text=Web+07", kicker:"Web design", title:"Restaurant website", text:"Menu, reservations and gallery pages with a warm, tactile visual style." },
-  { img:"https://placehold.co/480x360/C9683F/FFFFFF?text=Web+08", kicker:"Web design", title:"Real estate listings site", text:"Searchable listings grid with map view and individual property pages." }
+  { img:"https://placehold.co/480x360/ce0000/FFFFFF?text=Web+01", kicker:"Web design", title:"Personal portfolio site", text:"A minimal one-page portfolio built to showcase case studies and clients." },
+  { img:"https://placehold.co/480x360/ce0000/FFFFFF?text=Web+02", kicker:"Web design", title:"E-commerce storefront", text:"Full storefront layout with collection grid, product page and cart drawer." },
+  { img:"https://placehold.co/480x360/ce0000/FFFFFF?text=Web+03", kicker:"Web design", title:"Local business website", text:"Service pages, booking widget and testimonials for a local business." },
+  { img:"https://placehold.co/480x360/ce0000/FFFFFF?text=Web+04", kicker:"Web design", title:"SaaS marketing site", text:"Feature-led marketing site with pricing table and integrations page." }
 ];
 
 const ALL_ITEMS = [...FUNNEL_ITEMS, ...WEB_ITEMS];
 
 const DATA = { all: ALL_ITEMS, funnel: FUNNEL_ITEMS, web: WEB_ITEMS };
-const PER_SLIDE = 4;
+const PER_SLIDE = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--cols'), 10) || 2;
 
 function chunk(arr, size){
   const out = [];
@@ -294,7 +366,6 @@ function buildPanel(key){
 ['all','funnel','web'].forEach(buildPanel);
 
 const tabs = document.querySelectorAll('.tab');
-const panels = document.querySelectorAll('.panel');
 const prevBtn = document.querySelector('.nav-btn.prev');
 const nextBtn = document.querySelector('.nav-btn.next');
 
@@ -318,14 +389,31 @@ function goTo(panel, index){
   renderPosition(panel);
 }
 
+/* Fade the old category out, then fade the new one in */
+function switchPanel(target){
+  const newPanel = document.getElementById('panel-' + target);
+  const oldPanel = activePanel();
+  if(!oldPanel || oldPanel === newPanel) return;
+
+  oldPanel.classList.remove('visible');
+  setTimeout(() => {
+    oldPanel.classList.remove('active');
+    newPanel.classList.add('active');
+    void newPanel.offsetWidth;
+    requestAnimationFrame(() => {
+      newPanel.classList.add('visible');
+      renderPosition(newPanel);
+      notifyHeight();
+    });
+  }, 400);
+}
+
 tabs.forEach(tab => {
   tab.addEventListener('click', () => {
-    const target = tab.dataset.target;
+    if(tab.classList.contains('active')) return;
     tabs.forEach(t => { t.classList.remove('active'); t.setAttribute('aria-selected','false'); });
     tab.classList.add('active'); tab.setAttribute('aria-selected','true');
-    panels.forEach(p => p.classList.remove('active'));
-    document.getElementById('panel-' + target).classList.add('active');
-    renderPosition(activePanel());
+    switchPanel(tab.dataset.target);
   });
 });
 
