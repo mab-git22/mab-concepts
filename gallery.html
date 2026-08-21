@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Design Showcase</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1B1D23;
+    --ink-soft:#5B5F6B;
+    --line:#E4E2DC;
+    --card:#FFFFFF;
+    --card-2:#F4F2ED;
+    --sea:#2E6E62;
+    --sea-light:#E4EFEC;
+    --clay:#C9683F;
+    --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0;
+    padding:0;
+    background:transparent !important;
+    font-family:'Inter',sans-serif;
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+  }
+  body{
+    width:100%;
+    min-height:100vh;
+    padding:28px 24px 40px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+  }
+
+  /* ---------- Tabs ---------- */
+  .tabs{
+    display:flex;
+    gap:8px;
+    background:var(--card-2);
+    padding:6px;
+    border-radius:999px;
+    margin-bottom:34px;
+    flex-wrap:wrap;
+    justify-content:center;
+  }
+  .tab{
+    border:none;
+    background:transparent;
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:600;
+    font-size:13px;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    padding:10px 22px;
+    border-radius:999px;
+    cursor:pointer;
+    transition:background .25s ease, color .25s ease;
+    white-space:nowrap;
+  }
+  .tab:hover{ color:var(--ink); }
+  .tab.active{
+    background:var(--ink);
+    color:#fff;
+  }
+
+  /* ---------- Stage ---------- */
+  .stage{
+    width:100%;
+    max-width:1160px;
+    position:relative;
+  }
+  .panel{ display:none; }
+  .panel.active{ display:block; }
+
+  .slide-viewport{
+    overflow:hidden;
+    width:100%;
+  }
+  .slide-track{
+    display:flex;
+    transition:transform .45s cubic-bezier(.65,0,.35,1);
+  }
+  .slide{
+    flex:0 0 100%;
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:22px;
+    padding:2px;
+  }
+
+  .card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+    height:100%;
+  }
+  .card .thumb{
+    aspect-ratio:4/3;
+    width:100%;
+    display:block;
+    object-fit:cover;
+    background:var(--card-2);
+  }
+  .card .body{
+    padding:16px 16px 20px;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    flex:1;
+  }
+  .card .kicker{
+    font-size:10.5px;
+    letter-spacing:.09em;
+    text-transform:uppercase;
+    font-weight:600;
+    color:var(--sea);
+  }
+  .card h3{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:15.5px;
+    font-weight:600;
+    margin:0;
+    line-height:1.3;
+    color:var(--ink);
+  }
+  .card p{
+    font-size:12.5px;
+    line-height:1.55;
+    color:var(--ink-soft);
+    margin:0;
+  }
+
+  /* ---------- Arrows ---------- */
+  .nav-btn{
+    position:absolute;
+    top:50%;
+    transform:translateY(-50%);
+    width:42px;
+    height:42px;
+    border-radius:50%;
+    border:1px solid var(--line);
+    background:#fff;
+    color:var(--ink);
+    font-size:18px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    z-index:5;
+    transition:background .2s ease, border-color .2s ease, opacity .2s ease;
+  }
+  .nav-btn:hover{ background:var(--card-2); border-color:var(--ink-soft); }
+  .nav-btn.prev{ left:-21px; }
+  .nav-btn.next{ right:-21px; }
+  .nav-btn[disabled]{ opacity:.3; cursor:default; }
+  .nav-btn[disabled]:hover{ background:#fff; border-color:var(--line); }
+
+  /* ---------- Dots ---------- */
+  .dots{
+    display:flex;
+    justify-content:center;
+    gap:7px;
+    margin-top:22px;
+  }
+  .dot{
+    width:7px;
+    height:7px;
+    border-radius:50%;
+    background:var(--line);
+    border:none;
+    cursor:pointer;
+    padding:0;
+  }
+  .dot.active{ background:var(--sea); width:20px; border-radius:4px; }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width: 980px){
+    .slide{ grid-template-columns:repeat(2,1fr); }
+    .nav-btn.prev{ left:0; }
+    .nav-btn.next{ right:0; }
+    .stage{ padding:0 46px; }
+  }
+  @media (max-width: 560px){
+    .slide{ grid-template-columns:1fr; gap:16px; }
+    .tabs{ width:100%; }
+    .tab{ flex:1; padding:10px 10px; font-size:11.5px; }
+    body{ padding:20px 12px 32px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="tabs" role="tablist" aria-label="Design categories">
+  <button class="tab active" data-target="all" role="tab" aria-selected="true">All</button>
+  <button class="tab" data-target="funnel" role="tab" aria-selected="false">Funnel Designs</button>
+  <button class="tab" data-target="web" role="tab" aria-selected="false">Web Designs</button>
+</div>
+
+<div class="stage">
+  <button class="nav-btn prev" aria-label="Previous">&#8249;</button>
+  <button class="nav-btn next" aria-label="Next">&#8250;</button>
+
+  <div id="panel-all" class="panel active">
+    <div class="slide-viewport"><div class="slide-track"></div></div>
+    <div class="dots"></div>
+  </div>
+  <div id="panel-funnel" class="panel">
+    <div class="slide-viewport"><div class="slide-track"></div></div>
+    <div class="dots"></div>
+  </div>
+  <div id="panel-web" class="panel">
+    <div class="slide-viewport"><div class="slide-track"></div></div>
+    <div class="dots"></div>
+  </div>
+</div>
+
+<script>
+/* ---------------------------------------------------------------
+   REPLACE the image src, title and paragraph text below with your
+   own content. "img" accepts any image URL (upload your images
+   somewhere and paste the link here).
+--------------------------------------------------------------- */
+const FUNNEL_ITEMS = [
+  { img:"https://placehold.co/480x360/2E6E62/FFFFFF?text=Funnel+01", kicker:"Funnel design", title:"SaaS free trial funnel", text:"A 3-step signup flow built to convert cold traffic into activated trial users." },
+  { img:"https://placehold.co/480x360/2E6E62/FFFFFF?text=Funnel+02", kicker:"Funnel design", title:"Webinar registration funnel", text:"Landing, confirmation and replay pages designed to maximize show-up rate." },
+  { img:"https://placehold.co/480x360/2E6E62/FFFFFF?text=Funnel+03", kicker:"Funnel design", title:"Lead magnet opt-in funnel", text:"A simple opt-in page paired with a thank-you upsell for list growth." },
+  { img:"https://placehold.co/480x360/2E6E62/FFFFFF?text=Funnel+04", kicker:"Funnel design", title:"Coaching application funnel", text:"Application-style funnel that pre-qualifies leads before a sales call." },
+  { img:"https://placehold.co/480x360/2E6E62/FFFFFF?text=Funnel+05", kicker:"Funnel design", title:"Product launch funnel", text:"Countdown-driven launch sequence with cart, upsell and downsell pages." },
+  { img:"https://placehold.co/480x360/2E6E62/FFFFFF?text=Funnel+06", kicker:"Funnel design", title:"Digital course funnel", text:"Sales page, checkout and order bump flow for a self-paced online course." },
+  { img:"https://placehold.co/480x360/2E6E62/FFFFFF?text=Funnel+07", kicker:"Funnel design", title:"Membership funnel", text:"Recurring membership funnel with tiered pricing and a retention offer." },
+  { img:"https://placehold.co/480x360/2E6E62/FFFFFF?text=Funnel+08", kicker:"Funnel design", title:"Consultation booking funnel", text:"Calendar-integrated booking funnel for service-based businesses." }
+];
+
+const WEB_ITEMS = [
+  { img:"https://placehold.co/480x360/C9683F/FFFFFF?text=Web+01", kicker:"Web design", title:"Personal portfolio site", text:"A minimal one-page portfolio built to showcase case studies and clients." },
+  { img:"https://placehold.co/480x360/C9683F/FFFFFF?text=Web+02", kicker:"Web design", title:"E-commerce storefront", text:"Full storefront layout with collection grid, product page and cart drawer." },
+  { img:"https://placehold.co/480x360/C9683F/FFFFFF?text=Web+03", kicker:"Web design", title:"Local business website", text:"Service pages, booking widget and testimonials for a local business." },
+  { img:"https://placehold.co/480x360/C9683F/FFFFFF?text=Web+04", kicker:"Web design", title:"SaaS marketing site", text:"Feature-led marketing site with pricing table and integrations page." },
+  { img:"https://placehold.co/480x360/C9683F/FFFFFF?text=Web+05", kicker:"Web design", title:"Blog and newsletter site", text:"Editorial layout optimized for readability and newsletter sign-ups." },
+  { img:"https://placehold.co/480x360/C9683F/FFFFFF?text=Web+06", kicker:"Web design", title:"Nonprofit organization site", text:"Donation-first layout with impact stats and volunteer sign-up flow." },
+  { img:"https://placehold.co/480x360/C9683F/FFFFFF?text=Web+07", kicker:"Web design", title:"Restaurant website", text:"Menu, reservations and gallery pages with a warm, tactile visual style." },
+  { img:"https://placehold.co/480x360/C9683F/FFFFFF?text=Web+08", kicker:"Web design", title:"Real estate listings site", text:"Searchable listings grid with map view and individual property pages." }
+];
+
+const ALL_ITEMS = [...FUNNEL_ITEMS, ...WEB_ITEMS];
+
+const DATA = { all: ALL_ITEMS, funnel: FUNNEL_ITEMS, web: WEB_ITEMS };
+const PER_SLIDE = 4;
+
+function chunk(arr, size){
+  const out = [];
+  for(let i=0;i<arr.length;i+=size) out.push(arr.slice(i,i+size));
+  return out;
+}
+
+function cardHTML(item){
+  return `<div class="card">
+    <img class="thumb" src="${item.img}" alt="${item.title}" loading="lazy">
+    <div class="body">
+      <span class="kicker">${item.kicker}</span>
+      <h3>${item.title}</h3>
+      <p>${item.text}</p>
+    </div>
+  </div>`;
+}
+
+function buildPanel(key){
+  const panel = document.getElementById('panel-' + key);
+  const track = panel.querySelector('.slide-track');
+  const dotsWrap = panel.querySelector('.dots');
+  const slides = chunk(DATA[key], PER_SLIDE);
+
+  track.innerHTML = slides.map(group =>
+    `<div class="slide">${group.map(cardHTML).join('')}</div>`
+  ).join('');
+
+  dotsWrap.innerHTML = slides.map((_, i) =>
+    `<button class="dot${i===0?' active':''}" data-index="${i}" aria-label="Go to slide ${i+1}"></button>`
+  ).join('');
+
+  panel._slideCount = slides.length;
+  panel._current = 0;
+}
+
+['all','funnel','web'].forEach(buildPanel);
+
+const tabs = document.querySelectorAll('.tab');
+const panels = document.querySelectorAll('.panel');
+const prevBtn = document.querySelector('.nav-btn.prev');
+const nextBtn = document.querySelector('.nav-btn.next');
+
+function activePanel(){
+  return document.querySelector('.panel.active');
+}
+
+function renderPosition(panel){
+  const track = panel.querySelector('.slide-track');
+  track.style.transform = `translateX(-${panel._current * 100}%)`;
+  panel.querySelectorAll('.dot').forEach((d, i) => {
+    d.classList.toggle('active', i === panel._current);
+  });
+  prevBtn.disabled = panel._current === 0;
+  nextBtn.disabled = panel._current === panel._slideCount - 1;
+}
+
+function goTo(panel, index){
+  const max = panel._slideCount - 1;
+  panel._current = Math.max(0, Math.min(max, index));
+  renderPosition(panel);
+}
+
+tabs.forEach(tab => {
+  tab.addEventListener('click', () => {
+    const target = tab.dataset.target;
+    tabs.forEach(t => { t.classList.remove('active'); t.setAttribute('aria-selected','false'); });
+    tab.classList.add('active'); tab.setAttribute('aria-selected','true');
+    panels.forEach(p => p.classList.remove('active'));
+    document.getElementById('panel-' + target).classList.add('active');
+    renderPosition(activePanel());
+  });
+});
+
+prevBtn.addEventListener('click', () => {
+  const p = activePanel();
+  goTo(p, p._current - 1);
+});
+nextBtn.addEventListener('click', () => {
+  const p = activePanel();
+  goTo(p, p._current + 1);
+});
+
+document.querySelectorAll('.dots').forEach(wrap => {
+  wrap.addEventListener('click', (e) => {
+    const btn = e.target.closest('.dot');
+    if(!btn) return;
+    goTo(activePanel(), parseInt(btn.dataset.index, 10));
+  });
+});
+
+renderPosition(activePanel());
+
+function notifyHeight(){
+  const h = document.body.scrollHeight;
+  parent.postMessage({ type: 'iframeHeight', height: h }, '*');
+}
+window.addEventListener('load', notifyHeight);
+window.addEventListener('resize', notifyHeight);
+</script>
+
+</body>
+</html>
