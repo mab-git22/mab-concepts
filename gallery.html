@@ -272,7 +272,10 @@
   .dot.active{ background:var(--c-red); width:20px; border-radius:4px; }
 
   /* ---------- Click-to-preview ---------- */
-  .card .thumb{ cursor: zoom-in; }
+  /* Default: no special cursor. Only switches to zoom-in once JS confirms
+     the "-full" image actually exists (see .has-preview below). */
+  .card .thumb{ cursor: default; }
+  .card .thumb.has-preview{ cursor: zoom-in; }
   #preview-backdrop{
     position:fixed;
     inset:0;
@@ -490,16 +493,25 @@ function buildPanel(key){
 
 /* Warm the browser cache for every "-full" preview image shortly after
    load, so clicking a thumbnail later shows the popup instantly instead
-   of waiting on a network fetch. */
+   of waiting on a network fetch. While we're at it, only mark a thumb as
+   "has-preview" (zoom cursor) once we've confirmed its "-full" image
+   actually loads — otherwise it keeps the normal cursor. */
 function preloadFullImages(){
-  const seen = new Set();
+  const bySrc = new Map(); // preview src -> [thumb elements using it]
   document.querySelectorAll('.thumb').forEach(t => {
     const src = t.dataset.preview;
-    if (src && !seen.has(src)) {
-      seen.add(src);
-      const img = new Image();
-      img.src = src;
-    }
+    if (!src) return;
+    if (!bySrc.has(src)) bySrc.set(src, []);
+    bySrc.get(src).push(t);
+  });
+
+  bySrc.forEach((thumbs, src) => {
+    const img = new Image();
+    img.onload = () => {
+      thumbs.forEach(t => t.classList.add('has-preview'));
+    };
+    // onerror: leave thumbs without the class, so cursor stays default.
+    img.src = src;
   });
 }
 if ('requestIdleCallback' in window) {
