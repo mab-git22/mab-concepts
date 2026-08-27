@@ -296,7 +296,7 @@
   }
   #hover-preview.visible{ opacity:1; pointer-events:auto; transform:translate(-50%,-50%) scale(1); }
   #hover-preview-scroll{
-    max-height:80vh;
+    max-height:75vh;
     overflow-y:auto;
     overscroll-behavior:contain;
     border-radius:6px;
@@ -602,6 +602,7 @@ document.querySelectorAll('.thumb').forEach(img => {
 {
   const backdrop = document.getElementById('preview-backdrop');
   const preview = document.getElementById('hover-preview');
+  const previewScroll = document.getElementById('hover-preview-scroll');
   const previewImg = preview.querySelector('img');
   const closeBtn = document.getElementById('hover-preview-close');
   let activeThumb = null;
@@ -625,6 +626,7 @@ document.querySelectorAll('.thumb').forEach(img => {
       activeThumb = thumb;
       previewImg.src = fullSrc;
       previewImg.alt = thumb.alt || '';
+      previewScroll.scrollTop = 0; // always start at the top of the image
       preview.classList.add('visible');
       backdrop.classList.add('visible');
     };
