@@ -273,6 +273,16 @@
 
   /* ---------- Click-to-preview ---------- */
   .card .thumb{ cursor: zoom-in; }
+  #preview-backdrop{
+    position:fixed;
+    inset:0;
+    z-index:998;
+    background:rgba(20,20,20,.35);
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .18s ease;
+  }
+  #preview-backdrop.visible{ opacity:1; pointer-events:auto; }
   #hover-preview{
     position:fixed;
     top:0; left:0;
@@ -320,6 +330,17 @@
   }
   #hover-preview-close:hover{ background:var(--c-red); }
   #hover-preview-close svg{ width:16px; height:16px; display:block; }
+
+  /* On small screens, center the preview as a responsive modal
+     instead of floating it near the (often touch) tap point. */
+  @media (max-width:640px){
+    #hover-preview{
+      width:92vw;
+      top:50%;
+      left:50%;
+    }
+    #hover-preview-scroll{ max-height:75vh; }
+  }
 
   /* ---------- Responsive ---------- */
   @media (max-width: 560px){
@@ -381,6 +402,7 @@
   </div>
 </div>
 
+<div id="preview-backdrop"></div>
 <div id="hover-preview" aria-hidden="true">
   <button id="hover-preview-close" type="button" aria-label="Close preview">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="6" x2="18" y2="18"></line><line x1="18" y1="6" x2="6" y2="18"></line></svg>
@@ -581,21 +603,33 @@ document.querySelectorAll('.thumb').forEach(img => {
 
 /* ---------------------------------------------------------------
    Click-to-preview: hovering a thumbnail just shows a zoom cursor.
-   Clicking it opens a larger version floating near the click point.
-   Closed via the × button or by clicking outside the popup.
+   Clicking it opens a larger version. On desktop it floats near the
+   click point; on small screens it centers as a responsive modal.
+   Closed via the × button, the backdrop, or the Escape key.
 --------------------------------------------------------------- */
 {
+  const backdrop = document.getElementById('preview-backdrop');
   const preview = document.getElementById('hover-preview');
   const previewImg = preview.querySelector('img');
   const closeBtn = document.getElementById('hover-preview-close');
   let activeThumb = null;
 
+  function isMobile(){
+    return window.matchMedia('(max-width: 640px)').matches;
+  }
+
   function hidePreview(){
     activeThumb = null;
     preview.classList.remove('visible');
+    backdrop.classList.remove('visible');
   }
 
   function positionPreview(clientX, clientY){
+    if (isMobile()) {
+      // Centered modal on small screens — CSS handles top:50%/left:50%.
+      preview.style.transform = 'translate(-50%, -50%)';
+      return;
+    }
     const margin = 18;
     const vw = window.innerWidth;
     const vh = window.innerHeight;
@@ -615,33 +649,35 @@ document.querySelectorAll('.thumb').forEach(img => {
 
   document.addEventListener('click', (e) => {
     const thumb = e.target.closest('.thumb');
+    if (!thumb) return;
 
-    if (thumb) {
-      const fullSrc = thumb.dataset.preview;
-      if (!fullSrc) return; // no "-full" file configured for this item
+    const fullSrc = thumb.dataset.preview;
+    if (!fullSrc) return; // no "-full" file configured for this item
 
-      // Only show the preview once the full-size image is confirmed to load.
-      const probe = new Image();
-      probe.onload = () => {
-        activeThumb = thumb;
-        previewImg.src = fullSrc;
-        previewImg.alt = thumb.alt || '';
-        preview.classList.add('visible');
-        positionPreview(e.clientX, e.clientY);
-      };
-      probe.src = fullSrc;
-      return;
-    }
-
-    // Click outside the popup (and not on a thumbnail) dismisses it.
-    if (activeThumb && !preview.contains(e.target)) {
-      hidePreview();
-    }
+    // Only show the preview once the full-size image is confirmed to load.
+    const probe = new Image();
+    probe.onload = () => {
+      activeThumb = thumb;
+      previewImg.src = fullSrc;
+      previewImg.alt = thumb.alt || '';
+      preview.classList.add('visible');
+      backdrop.classList.add('visible');
+      positionPreview(e.clientX, e.clientY);
+    };
+    probe.src = fullSrc;
   });
+
+  // The backdrop sits behind the popup and covers the full viewport,
+  // so clicking anywhere outside the popup reliably closes it.
+  backdrop.addEventListener('click', hidePreview);
 
   closeBtn.addEventListener('click', (e) => {
     e.stopPropagation();
     hidePreview();
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && activeThumb) hidePreview();
   });
 
   window.addEventListener('resize', () => {
