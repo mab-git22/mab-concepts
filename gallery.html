@@ -277,19 +277,16 @@
     position:fixed;
     inset:0;
     z-index:998;
-    background:rgba(20,20,20,.35);
-    opacity:0;
     pointer-events:none;
-    transition:opacity .18s ease;
   }
-  #preview-backdrop.visible{ opacity:1; pointer-events:auto; }
+  #preview-backdrop.visible{ pointer-events:auto; }
   #hover-preview{
     position:fixed;
-    top:0; left:0;
+    top:50%; left:50%;
     z-index:999;
     pointer-events:none;
     opacity:0;
-    transform:translate(-9999px,-9999px) scale(.96);
+    transform:translate(-50%,-50%) scale(.96);
     transition:opacity .18s ease, transform .18s ease;
     background:var(--c-white);
     border-radius:10px;
@@ -297,7 +294,7 @@
     padding:6px;
     width:512px;
   }
-  #hover-preview.visible{ opacity:1; pointer-events:auto; }
+  #hover-preview.visible{ opacity:1; pointer-events:auto; transform:translate(-50%,-50%) scale(1); }
   #hover-preview-scroll{
     max-height:60vh;
     overflow-y:auto;
@@ -331,14 +328,9 @@
   #hover-preview-close:hover{ background:var(--c-red); }
   #hover-preview-close svg{ width:16px; height:16px; display:block; }
 
-  /* On small screens, center the preview as a responsive modal
-     instead of floating it near the (often touch) tap point. */
+  /* On small screens, use more of the viewport width/height. */
   @media (max-width:640px){
-    #hover-preview{
-      width:92vw;
-      top:50%;
-      left:50%;
-    }
+    #hover-preview{ width:92vw; }
     #hover-preview-scroll{ max-height:75vh; }
   }
 
@@ -603,9 +595,9 @@ document.querySelectorAll('.thumb').forEach(img => {
 
 /* ---------------------------------------------------------------
    Click-to-preview: hovering a thumbnail just shows a zoom cursor.
-   Clicking it opens a larger version. On desktop it floats near the
-   click point; on small screens it centers as a responsive modal.
-   Closed via the × button, the backdrop, or the Escape key.
+   Clicking it opens a larger version centered on screen, with a
+   light dimmed backdrop behind it. Closed via the × button, the
+   backdrop, or the Escape key.
 --------------------------------------------------------------- */
 {
   const backdrop = document.getElementById('preview-backdrop');
@@ -614,37 +606,10 @@ document.querySelectorAll('.thumb').forEach(img => {
   const closeBtn = document.getElementById('hover-preview-close');
   let activeThumb = null;
 
-  function isMobile(){
-    return window.matchMedia('(max-width: 640px)').matches;
-  }
-
   function hidePreview(){
     activeThumb = null;
     preview.classList.remove('visible');
     backdrop.classList.remove('visible');
-  }
-
-  function positionPreview(clientX, clientY){
-    if (isMobile()) {
-      // Centered modal on small screens — CSS handles top:50%/left:50%.
-      preview.style.transform = 'translate(-50%, -50%)';
-      return;
-    }
-    const margin = 18;
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
-    const pw = preview.offsetWidth;
-    const ph = preview.offsetHeight;
-
-    let x = clientX + margin;
-    let y = clientY + margin;
-
-    if (x + pw > vw - margin) x = clientX - margin - pw;
-    if (y + ph > vh - margin) y = clientY - margin - ph;
-    if (x < margin) x = margin;
-    if (y < margin) y = margin;
-
-    preview.style.transform = `translate(${x}px, ${y}px)`;
   }
 
   document.addEventListener('click', (e) => {
@@ -662,7 +627,6 @@ document.querySelectorAll('.thumb').forEach(img => {
       previewImg.alt = thumb.alt || '';
       preview.classList.add('visible');
       backdrop.classList.add('visible');
-      positionPreview(e.clientX, e.clientY);
     };
     probe.src = fullSrc;
   });
@@ -678,10 +642,6 @@ document.querySelectorAll('.thumb').forEach(img => {
 
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && activeThumb) hidePreview();
-  });
-
-  window.addEventListener('resize', () => {
-    if (activeThumb) hidePreview();
   });
 }
 </script>
