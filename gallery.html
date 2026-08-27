@@ -271,13 +271,13 @@
   }
   .dot.active{ background:var(--c-red); width:20px; border-radius:4px; }
 
-  /* ---------- Hover preview ---------- */
+  /* ---------- Click-to-preview ---------- */
   .card .thumb{ cursor: zoom-in; }
   #hover-preview{
     position:fixed;
     top:0; left:0;
     z-index:999;
-    pointer-events:auto;
+    pointer-events:none;
     opacity:0;
     transform:translate(-9999px,-9999px) scale(.96);
     transition:opacity .18s ease, transform .18s ease;
@@ -286,20 +286,40 @@
     box-shadow:0 18px 45px rgba(0,0,0,.28), 0 2px 8px rgba(0,0,0,.12);
     padding:6px;
     width:512px;
+  }
+  #hover-preview.visible{ opacity:1; pointer-events:auto; }
+  #hover-preview-scroll{
     max-height:60vh;
     overflow-y:auto;
     overscroll-behavior:contain;
+    border-radius:6px;
   }
-  #hover-preview.visible{ opacity:1; }
   #hover-preview img{
     display:block;
     width:100%;
     height:auto;
     border-radius:6px;
   }
-  @media (hover: none){
-    #hover-preview{ display:none; }
+  #hover-preview-close{
+    position:absolute;
+    top:14px;
+    right:14px;
+    width:32px;
+    height:32px;
+    border:none;
+    border-radius:50%;
+    background:var(--c-ink);
+    color:var(--c-white);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    z-index:1;
+    box-shadow:0 2px 8px rgba(0,0,0,.25);
+    transition:background .2s ease;
   }
+  #hover-preview-close:hover{ background:var(--c-red); }
+  #hover-preview-close svg{ width:16px; height:16px; display:block; }
 
   /* ---------- Responsive ---------- */
   @media (max-width: 560px){
@@ -361,7 +381,12 @@
   </div>
 </div>
 
-<div id="hover-preview" aria-hidden="true"><img alt=""></div>
+<div id="hover-preview" aria-hidden="true">
+  <button id="hover-preview-close" type="button" aria-label="Close preview">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="6" x2="18" y2="18"></line><line x1="18" y1="6" x2="6" y2="18"></line></svg>
+  </button>
+  <div id="hover-preview-scroll"><img alt=""></div>
+</div>
 
 <script>
 /* ---------------------------------------------------------------
@@ -555,97 +580,73 @@ document.querySelectorAll('.thumb').forEach(img => {
 });
 
 /* ---------------------------------------------------------------
-   Floating hover preview: hovering a thumbnail shows a larger
-   version of that same image floating near the cursor.
+   Click-to-preview: hovering a thumbnail just shows a zoom cursor.
+   Clicking it opens a larger version floating near the click point.
+   Closed via the × button or by clicking outside the popup.
 --------------------------------------------------------------- */
-const canHover = window.matchMedia('(hover: hover)').matches;
-if (canHover) {
+{
   const preview = document.getElementById('hover-preview');
   const previewImg = preview.querySelector('img');
+  const closeBtn = document.getElementById('hover-preview-close');
   let activeThumb = null;
-  let hoveringPreview = false;
 
   function hidePreview(){
     activeThumb = null;
-    hoveringPreview = false;
     preview.classList.remove('visible');
   }
 
-  function positionPreview(e){
+  function positionPreview(clientX, clientY){
     const margin = 18;
     const vw = window.innerWidth;
     const vh = window.innerHeight;
     const pw = preview.offsetWidth;
     const ph = preview.offsetHeight;
 
-    let x = e.clientX + margin;
-    let y = e.clientY + margin;
+    let x = clientX + margin;
+    let y = clientY + margin;
 
-    if (x + pw > vw - margin) x = e.clientX - margin - pw;
-    if (y + ph > vh - margin) y = e.clientY - margin - ph;
+    if (x + pw > vw - margin) x = clientX - margin - pw;
+    if (y + ph > vh - margin) y = clientY - margin - ph;
     if (x < margin) x = margin;
     if (y < margin) y = margin;
 
     preview.style.transform = `translate(${x}px, ${y}px)`;
   }
 
-  // If the auto-derived "-full" image doesn't exist, don't show any
-  // preview at all for that thumbnail (no fallback to the thumbnail itself).
-  document.addEventListener('mouseover', (e) => {
+  document.addEventListener('click', (e) => {
     const thumb = e.target.closest('.thumb');
-    if (!thumb || thumb === activeThumb) return;
-    activeThumb = thumb;
 
-    const fullSrc = thumb.dataset.preview;
-    const probe = new Image();
-    probe.onload = () => {
-      if (activeThumb !== thumb) return; // moved on before it loaded
-      previewImg.src = fullSrc;
-      previewImg.alt = thumb.alt || '';
-      preview.classList.add('visible');
-      positionPreview(e);
-    };
-    probe.onerror = () => {
-      if (activeThumb === thumb) hidePreview();
-    };
-    probe.src = fullSrc;
-  });
+    if (thumb) {
+      const fullSrc = thumb.dataset.preview;
+      if (!fullSrc) return; // no "-full" file configured for this item
 
-  // Keep following the cursor only until the user moves into the
-  // popup itself (e.g. to scroll a tall preview) — then hold still.
-  document.addEventListener('mousemove', (e) => {
-    if (!activeThumb || hoveringPreview) return;
-    positionPreview(e);
-  });
+      // Only show the preview once the full-size image is confirmed to load.
+      const probe = new Image();
+      probe.onload = () => {
+        activeThumb = thumb;
+        previewImg.src = fullSrc;
+        previewImg.alt = thumb.alt || '';
+        preview.classList.add('visible');
+        positionPreview(e.clientX, e.clientY);
+      };
+      probe.src = fullSrc;
+      return;
+    }
 
-  preview.addEventListener('mouseenter', () => {
-    hoveringPreview = true;
-  });
-
-  preview.addEventListener('mouseleave', (e) => {
-    hoveringPreview = false;
-    // Don't hide if the cursor moved back onto the thumbnail that
-    // opened it — only close once it truly leaves both.
-    if (!(activeThumb && activeThumb.contains(e.relatedTarget))) {
+    // Click outside the popup (and not on a thumbnail) dismisses it.
+    if (activeThumb && !preview.contains(e.target)) {
       hidePreview();
     }
   });
 
-  // mouseleave doesn't bubble, but listening in the capture phase on
-  // document lets us catch it firing on the thumbnail itself.
-  document.addEventListener('mouseleave', (e) => {
-    if (e.target === activeThumb) {
-      // Don't hide if the cursor is moving into the popup to scroll it.
-      if (preview.contains(e.relatedTarget)) return;
-      hidePreview();
-    }
-  }, true);
-
-  window.addEventListener('scroll', (e) => {
-    if (!activeThumb) return;
-    if (preview.contains(e.target)) return; // scrolling inside the popup itself
+  closeBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
     hidePreview();
-  }, true);
+  });
+
+  window.addEventListener('resize', () => {
+    if (activeThumb) hidePreview();
+  });
 }
 </script>
 
