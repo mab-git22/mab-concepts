@@ -292,11 +292,12 @@
     border-radius:10px;
     box-shadow:0 18px 45px rgba(0,0,0,.28), 0 2px 8px rgba(0,0,0,.12);
     padding:6px;
-    width:640px;
+    width:720px;
+    max-width:90vw;
   }
   #hover-preview.visible{ opacity:1; pointer-events:auto; transform:translate(-50%,-50%) scale(1); }
   #hover-preview-scroll{
-    max-height:75vh;
+    max-height:90vh;
     overflow-y:auto;
     overscroll-behavior:contain;
     border-radius:6px;
@@ -331,7 +332,7 @@
   /* On small screens, use more of the viewport width/height. */
   @media (max-width:640px){
     #hover-preview{ width:92vw; }
-    #hover-preview-scroll{ max-height:75vh; }
+    #hover-preview-scroll{ max-height:90vh; }
   }
 
   /* ---------- Responsive ---------- */
@@ -486,6 +487,26 @@ function buildPanel(key){
 }
 
 ['all','funnel','web'].forEach(buildPanel);
+
+/* Warm the browser cache for every "-full" preview image shortly after
+   load, so clicking a thumbnail later shows the popup instantly instead
+   of waiting on a network fetch. */
+function preloadFullImages(){
+  const seen = new Set();
+  document.querySelectorAll('.thumb').forEach(t => {
+    const src = t.dataset.preview;
+    if (src && !seen.has(src)) {
+      seen.add(src);
+      const img = new Image();
+      img.src = src;
+    }
+  });
+}
+if ('requestIdleCallback' in window) {
+  requestIdleCallback(preloadFullImages);
+} else {
+  setTimeout(preloadFullImages, 500);
+}
 
 const tabs = document.querySelectorAll('.tab');
 const prevBtn = document.querySelector('.nav-btn.prev');
@@ -644,6 +665,13 @@ document.querySelectorAll('.thumb').forEach(img => {
 
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && activeThumb) hidePreview();
+  });
+
+  // This page is likely embedded in an iframe. A click outside the
+  // iframe (on the parent page) can't be seen directly from in here,
+  // but it does blur this window — so use that as the outside-click signal.
+  window.addEventListener('blur', () => {
+    if (activeThumb) hidePreview();
   });
 }
 </script>
