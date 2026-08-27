@@ -271,6 +271,36 @@
   }
   .dot.active{ background:var(--c-red); width:20px; border-radius:4px; }
 
+  /* ---------- Hover preview ---------- */
+  .card .thumb{ cursor: zoom-in; }
+  #hover-preview{
+    position:fixed;
+    top:0; left:0;
+    z-index:999;
+    pointer-events:auto;
+    opacity:0;
+    transform:translate(-9999px,-9999px) scale(.96);
+    transition:opacity .18s ease, transform .18s ease;
+    background:var(--c-white);
+    border-radius:10px;
+    box-shadow:0 18px 45px rgba(0,0,0,.28), 0 2px 8px rgba(0,0,0,.12);
+    padding:6px;
+    width:320px;
+    max-height:80vh;
+    overflow-y:auto;
+    overscroll-behavior:contain;
+  }
+  #hover-preview.visible{ opacity:1; }
+  #hover-preview img{
+    display:block;
+    width:100%;
+    height:auto;
+    border-radius:6px;
+  }
+  @media (hover: none){
+    #hover-preview{ display:none; }
+  }
+
   /* ---------- Responsive ---------- */
   @media (max-width: 560px){
     .slide{ grid-template-columns:1fr; gap:16px; }
@@ -331,11 +361,23 @@
   </div>
 </div>
 
+<div id="hover-preview" aria-hidden="true"><img alt=""></div>
+
 <script>
 /* ---------------------------------------------------------------
    REPLACE the image src, title and paragraph text below with your
    own content. "img" accepts any image URL (upload your images
    somewhere and paste the link here).
+
+   The floating hover popup automatically looks for a full-size
+   version of each image named with a "-full" suffix in the same
+   folder, e.g. "images/web1.webp" -> "images/web1-full.webp".
+   You don't need to add anything per item — just make sure that
+   "-full" file exists alongside the thumbnail. If it's missing,
+   the popup falls back to the thumbnail itself.
+
+   (You can still override this for a single item by adding a
+   "preview" field with an exact path, which always wins.)
 
    Funnel Designs and Web Designs are locked to exactly 2 slides
    each (2 items per slide x 2 slides = 4 items). If you add or
@@ -366,9 +408,18 @@ function chunk(arr, size){
   return out;
 }
 
+/* Derives "images/web1.webp" -> "images/web1-full.webp" so you don't
+   have to type a "preview" path for every item by hand. */
+function deriveFullSrc(src){
+  const dot = src.lastIndexOf('.');
+  if (dot === -1) return src + '-full';
+  return src.slice(0, dot) + '-full' + src.slice(dot);
+}
+
 function cardHTML(item){
+  const previewSrc = item.preview || deriveFullSrc(item.img);
   return `<div class="card">
-    <img class="thumb" src="${item.img}" alt="${item.title}" loading="lazy">
+    <img class="thumb" src="${item.img}" data-preview="${previewSrc}" alt="${item.title}" loading="lazy">
     <div class="body">
       <span class="kicker">${item.kicker}</span>
       <h3>${item.title}</h3>
@@ -502,6 +553,98 @@ window.addEventListener('resize', notifyHeight);
 document.querySelectorAll('.thumb').forEach(img => {
   img.addEventListener('load', updateArrowOverlay);
 });
+
+/* ---------------------------------------------------------------
+   Floating hover preview: hovering a thumbnail shows a larger
+   version of that same image floating near the cursor.
+--------------------------------------------------------------- */
+const canHover = window.matchMedia('(hover: hover)').matches;
+if (canHover) {
+  const preview = document.getElementById('hover-preview');
+  const previewImg = preview.querySelector('img');
+  let activeThumb = null;
+  let hoveringPreview = false;
+
+  function hidePreview(){
+    activeThumb = null;
+    hoveringPreview = false;
+    preview.classList.remove('visible');
+  }
+
+  function positionPreview(e){
+    const margin = 18;
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const pw = preview.offsetWidth;
+    const ph = preview.offsetHeight;
+
+    let x = e.clientX + margin;
+    let y = e.clientY + margin;
+
+    if (x + pw > vw - margin) x = e.clientX - margin - pw;
+    if (y + ph > vh - margin) y = e.clientY - margin - ph;
+    if (x < margin) x = margin;
+    if (y < margin) y = margin;
+
+    preview.style.transform = `translate(${x}px, ${y}px)`;
+  }
+
+  // If the auto-derived "-full" image doesn't exist, don't show any
+  // preview at all for that thumbnail (no fallback to the thumbnail itself).
+  document.addEventListener('mouseover', (e) => {
+    const thumb = e.target.closest('.thumb');
+    if (!thumb || thumb === activeThumb) return;
+    activeThumb = thumb;
+
+    const fullSrc = thumb.dataset.preview;
+    const probe = new Image();
+    probe.onload = () => {
+      if (activeThumb !== thumb) return; // moved on before it loaded
+      previewImg.src = fullSrc;
+      previewImg.alt = thumb.alt || '';
+      preview.classList.add('visible');
+      positionPreview(e);
+    };
+    probe.onerror = () => {
+      if (activeThumb === thumb) hidePreview();
+    };
+    probe.src = fullSrc;
+  });
+
+  // Keep following the cursor only until the user moves into the
+  // popup itself (e.g. to scroll a tall preview) — then hold still.
+  document.addEventListener('mousemove', (e) => {
+    if (!activeThumb || hoveringPreview) return;
+    positionPreview(e);
+  });
+
+  preview.addEventListener('mouseenter', () => {
+    hoveringPreview = true;
+  });
+
+  preview.addEventListener('mouseleave', (e) => {
+    hoveringPreview = false;
+    // Don't hide if the cursor moved back onto the thumbnail that
+    // opened it — only close once it truly leaves both.
+    if (!(activeThumb && activeThumb.contains(e.relatedTarget))) {
+      hidePreview();
+    }
+  });
+
+  // mouseleave doesn't bubble, but listening in the capture phase on
+  // document lets us catch it firing on the thumbnail itself.
+  document.addEventListener('mouseleave', (e) => {
+    if (e.target === activeThumb) {
+      // Don't hide if the cursor is moving into the popup to scroll it.
+      if (preview.contains(e.relatedTarget)) return;
+      hidePreview();
+    }
+  }, true);
+
+  window.addEventListener('scroll', () => {
+    if (activeThumb) hidePreview();
+  }, true);
+}
 </script>
 
 </body>
