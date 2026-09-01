@@ -46,7 +46,7 @@
     flex-direction:column;
     align-items:center;
     justify-content:flex-start;
-    padding:24px 20px 40px;
+    padding:24px 72px 40px;
     background:transparent;
     opacity:0;
     animation:stageFadeIn .9s ease forwards;
@@ -586,13 +586,25 @@
     }
   });
 
-  // Iframe height is fixed at 430px (no more dynamic auto-resize)
+  // Desktop/tablet (2-column card grid) stays at the embed snippet's fixed
+  // 430px min-height — no override sent. Below the 600px mobile breakpoint
+  // the cards stack into 1 column and need real dynamic height, so we
+  // measure and report the actual content height there. When resizing back
+  // up past 600px we tell the parent to clear the inline height so the
+  // 430px CSS min-height takes over again.
   function sendHeightToParent(){
     if (window.parent && window.parent !== window) {
-      window.parent.postMessage(
-        { mabTestimonialsHeight: 430 },
-        '*'
-      );
+      if (window.innerWidth <= 600) {
+        window.parent.postMessage(
+          { mabTestimonialsHeight: document.documentElement.scrollHeight },
+          '*'
+        );
+      } else {
+        window.parent.postMessage(
+          { mabTestimonialsHeight: null },
+          '*'
+        );
+      }
     }
   }
   window.addEventListener('load', sendHeightToParent);
