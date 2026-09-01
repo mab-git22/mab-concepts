@@ -586,11 +586,11 @@
     }
   });
 
-  // Auto-resize support when embedded in an iframe (e.g. Systeme.io)
+  // Iframe height is fixed at 460px (no more dynamic auto-resize)
   function sendHeightToParent(){
     if (window.parent && window.parent !== window) {
       window.parent.postMessage(
-        { mabTestimonialsHeight: document.documentElement.scrollHeight },
+        { mabTestimonialsHeight: 460 },
         '*'
       );
     }
