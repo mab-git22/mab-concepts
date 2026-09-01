@@ -586,11 +586,11 @@
     }
   });
 
-  // Iframe height is fixed at 460px (no more dynamic auto-resize)
+  // Iframe height is fixed at 430px (no more dynamic auto-resize)
   function sendHeightToParent(){
     if (window.parent && window.parent !== window) {
       window.parent.postMessage(
-        { mabTestimonialsHeight: 460 },
+        { mabTestimonialsHeight: 430 },
         '*'
       );
     }
