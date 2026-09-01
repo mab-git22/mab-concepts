@@ -133,8 +133,8 @@
 
   .stars{
     color:var(--red);
-    font-size:22px;
-    letter-spacing:5px;
+    font-size:26px;
+    letter-spacing:6px;
     margin-bottom:14px;
   }
 
@@ -352,7 +352,7 @@
     .card{padding:24px 20px 20px;}
     .card-top{gap:16px;}
     .avatar{width:108px;height:108px;min-width:108px;font-size:24px;}
-    .stars{font-size:19px;}
+    .stars{font-size:22px;}
     #prevBtn{left:-4px;}
     #nextBtn{right:-4px;}
     .nav-arrow{width:32px;height:32px;}
@@ -477,7 +477,7 @@
     const dot = document.createElement('div');
     dot.className = 'dot' + (s===0 ? ' active' : '');
     dot.dataset.idx = s;
-    dot.addEventListener('click', () => userNavigate(s));
+    dot.addEventListener('click', () => goTo(s));
     dotsWrap.appendChild(dot);
   }
 
@@ -496,34 +496,10 @@
     update();
   }
 
-  // Manual navigation resets the autoplay timer so it doesn't fire
-  // right on the heels of a click the person just made.
-  function userNavigate(i){
-    goTo(i);
-    resetAutoplay();
-  }
+  document.getElementById('prevBtn').addEventListener('click', () => goTo(current-1));
+  document.getElementById('nextBtn').addEventListener('click', () => goTo(current+1));
 
-  document.getElementById('prevBtn').addEventListener('click', () => userNavigate(current-1));
-  document.getElementById('nextBtn').addEventListener('click', () => userNavigate(current+1));
-
-  // Autoplay
-  let autoplayTimer = null;
-  function startAutoplay(){
-    autoplayTimer = setInterval(() => goTo(current+1), 4000);
-  }
-  function stopAutoplay(){
-    clearInterval(autoplayTimer);
-  }
-  function resetAutoplay(){
-    stopAutoplay();
-    startAutoplay();
-  }
-  startAutoplay();
-
-  // Pause while the person is hovering the carousel or reading a modal
   const carouselEl = document.querySelector('.carousel');
-  carouselEl.addEventListener('mouseenter', stopAutoplay);
-  carouselEl.addEventListener('mouseleave', startAutoplay);
 
   // Modal / Read more
   const overlay = document.getElementById('modalOverlay');
@@ -550,13 +526,12 @@
     `;
     modalCard.querySelector('#modalCloseBtn').addEventListener('click', closeModal);
     overlay.classList.add('open');
-    stopAutoplay();
   }
 
   function closeModal(){
     overlay.classList.remove('open');
-    startAutoplay();
   }
+
 
   track.addEventListener('click', (e) => {
     const link = e.target.closest('.read-more');
@@ -608,8 +583,8 @@
   track.addEventListener('touchend', e => {
     if(touchStartX===null) return;
     const diff = e.changedTouches[0].clientX - touchStartX;
-    if(diff > 50) userNavigate(current-1);
-    else if(diff < -50) userNavigate(current+1);
+    if(diff > 50) goTo(current-1);
+    else if(diff < -50) goTo(current+1);
     touchStartX = null;
   });
 </script>
