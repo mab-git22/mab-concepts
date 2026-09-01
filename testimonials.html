@@ -586,28 +586,20 @@
     }
   });
 
-  // Desktop/tablet (2-column card grid) stays at the embed snippet's fixed
-  // 430px min-height — no override sent. Below the 600px mobile breakpoint
-  // the cards stack into 1 column and need real dynamic height, so we
-  // measure and report the actual content height there. When resizing back
-  // up past 600px we tell the parent to clear the inline height so the
-  // 430px CSS min-height takes over again.
+  // Always report the widget's real, measured content height so the
+  // iframe is sized to exactly fit — never clipping content (which was
+  // hiding the dots on desktop) and never leaving unexplained empty
+  // space (which showed up as a gap above the slider on the page).
   function sendHeightToParent(){
     if (window.parent && window.parent !== window) {
-      if (window.innerWidth <= 600) {
-        window.parent.postMessage(
-          { mabTestimonialsHeight: document.documentElement.scrollHeight },
-          '*'
-        );
-      } else {
-        window.parent.postMessage(
-          { mabTestimonialsHeight: null },
-          '*'
-        );
-      }
+      window.parent.postMessage(
+        { mabTestimonialsHeight: document.documentElement.scrollHeight },
+        '*'
+      );
     }
   }
   window.addEventListener('load', sendHeightToParent);
+  setTimeout(sendHeightToParent, 300);
   window.addEventListener('resize', sendHeightToParent);
 
   // basic swipe support
