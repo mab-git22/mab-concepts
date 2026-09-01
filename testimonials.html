@@ -36,6 +36,10 @@
   }
 
   /* ---------- Background scene ---------- */
+  @keyframes stageFadeIn{
+    from{opacity:0;}
+    to{opacity:1;}
+  }
   .stage{
     position:relative;
     display:flex;
@@ -44,6 +48,8 @@
     justify-content:center;
     padding:70px 20px;
     background:transparent;
+    opacity:0;
+    animation:stageFadeIn .9s ease forwards;
   }
 
   /* ---------- Carousel ---------- */
@@ -55,6 +61,7 @@
   }
 
   .carousel-viewport{
+    position:relative;
     overflow-x:hidden;
     overflow-y:visible;
     width:100%;
@@ -62,7 +69,7 @@
 
   .carousel-track{
     display:flex;
-    transition:transform .55s cubic-bezier(.65,0,.35,1);
+    transition:transform .75s cubic-bezier(.65,0,.35,1);
     will-change:transform;
   }
 
@@ -99,9 +106,9 @@
   }
 
   .avatar{
-    width:132px;
-    height:132px;
-    min-width:132px;
+    width:160px;
+    height:160px;
+    min-width:160px;
     border-radius:50%;
     background:linear-gradient(135deg,var(--grey),#3a3a3a);
     display:flex;
@@ -134,8 +141,9 @@
   .quote{
     font-family:'Mona Sans Display','Segoe UI',Arial,sans-serif;
     font-weight:400;
-    font-size:15px;
-    line-height:1.65;
+    font-size:16px;
+    letter-spacing:1px;
+    line-height:1.6em;
     color:#3a3a3a;
     margin:0;
     display:-webkit-box;
@@ -147,7 +155,7 @@
   .read-more{
     display:inline-block;
     margin-top:6px;
-    font-size:13px;
+    font-size:14px;
     font-weight:600;
     color:var(--red);
     text-decoration:none;
@@ -161,7 +169,7 @@
     width:46px;
     height:3px;
     background:var(--red);
-    margin:22px 0 14px;
+    margin:22px 0 14px 20px;
     border-radius:2px;
   }
 
@@ -169,18 +177,23 @@
     position:relative;
     display:inline-block;
     width:fit-content;
+    margin-left:20px;
   }
   .person-name{
     font-family:'Mona Sans Display','Segoe UI',Arial,sans-serif;
     font-weight:700;
-    font-size:15px;
-    letter-spacing:.3px;
+    text-transform:uppercase;
+    font-size:18px;
+    line-height:1.6em;
+    letter-spacing:1px;
     color:var(--ink);
     cursor:pointer;
     position:relative;
   }
   .person-role{
-    font-size:13px;
+    font-size:14px;
+    line-height:1.6em;
+    letter-spacing:1px;
     color:var(--grey);
     margin-top:2px;
   }
@@ -251,11 +264,12 @@
   }
   .dot{
     width:8px;height:8px;border-radius:50%;
-    background:rgba(31,31,31,.25);
+    background:#ffffff;
+    border:1px solid rgba(31,31,31,.18);
     cursor:pointer;
     transition:background .2s ease, transform .2s ease;
   }
-  .dot.active{background:var(--red); transform:scale(1.2);}
+  .dot.active{background:var(--red); border-color:var(--red); transform:scale(1.2);}
 
   /* ---------- Modal ---------- */
   .modal-overlay{
@@ -316,7 +330,10 @@
     #nextBtn{right:-38px;}
     .slide{gap:22px; padding:38px 30px;}
     .card{padding:28px 24px 22px;}
-    .avatar{width:110px;height:110px;min-width:110px;font-size:30px;}
+    .avatar{width:132px;height:132px;min-width:132px;font-size:30px;}
+    .quote{font-size:15px; line-height:1.5em;}
+    .person-name{font-size:16px; line-height:1.5em;}
+    .person-role{font-size:12px; line-height:1.4em;}
   }
 
   @media (max-width:820px){
@@ -334,8 +351,7 @@
     .slide{grid-template-columns:1fr; gap:20px; padding:30px 34px;}
     .card{padding:24px 20px 20px;}
     .card-top{gap:16px;}
-    .avatar{width:92px;height:92px;min-width:92px;font-size:24px;}
-    .quote{font-size:14px;}
+    .avatar{width:108px;height:108px;min-width:108px;font-size:24px;}
     .stars{font-size:19px;}
     #prevBtn{left:-4px;}
     #nextBtn{right:-4px;}
@@ -345,6 +361,7 @@
 
   @media (prefers-reduced-motion: reduce){
     .carousel-track, .card, .bubble, .modal-card, .modal-overlay{transition:none !important;}
+    .stage{animation:none !important; opacity:1 !important;}
   }
 </style>
 </head>
@@ -460,24 +477,109 @@
     const dot = document.createElement('div');
     dot.className = 'dot' + (s===0 ? ' active' : '');
     dot.dataset.idx = s;
-    dot.addEventListener('click', () => goTo(s));
+    dot.addEventListener('click', () => userNavigateJump(s));
     dotsWrap.appendChild(dot);
   }
 
-  function update(){
-    track.style.transform = `translateX(-${current * 100}%)`;
+  // Clone the first and last slides so the track can slide seamlessly past
+  // the ends without an abrupt rewind snap. trackPos 0 = clone of the last
+  // slide, trackPos 1..slideCount = the real slides, trackPos slideCount+1
+  // = clone of the first slide.
+  const realSlides = Array.from(track.children);
+  const firstClone = realSlides[0].cloneNode(true);
+  const lastClone = realSlides[realSlides.length - 1].cloneNode(true);
+  firstClone.setAttribute('aria-hidden', 'true');
+  lastClone.setAttribute('aria-hidden', 'true');
+  track.appendChild(firstClone);
+  track.insertBefore(lastClone, track.firstChild);
+
+  let trackPos = 1;
+  track.style.transition = 'none';
+  track.style.transform = `translateX(-${trackPos * 100}%)`;
+  void track.offsetWidth;
+  track.style.transition = '';
+
+  function render(){
+    track.style.transform = `translateX(-${trackPos * 100}%)`;
     document.querySelectorAll('.dot').forEach((d,i)=>{
       d.classList.toggle('active', i===current);
     });
+    if (typeof sendHeightToParent === 'function') {
+      setTimeout(sendHeightToParent, 50);
+    }
   }
 
-  function goTo(i){
+  // Adjacent step (used by prev/next/autoplay/swipe) — animates smoothly
+  // and, if it lands on a clone, silently resets to the matching real
+  // slide the instant the transition finishes, so the loop never snaps.
+  function stepNext(){
+    current = (current + 1) % slideCount;
+    trackPos++;
+    render();
+  }
+  function stepPrev(){
+    current = (current - 1 + slideCount) % slideCount;
+    trackPos--;
+    render();
+  }
+
+  // Direct jump (used by dots) — no clone crossing involved, just moves
+  // straight to the target slide.
+  function jumpTo(i){
     current = (i + slideCount) % slideCount;
-    update();
+    trackPos = current + 1;
+    render();
   }
 
-  document.getElementById('prevBtn').addEventListener('click', () => goTo(current-1));
-  document.getElementById('nextBtn').addEventListener('click', () => goTo(current+1));
+  track.addEventListener('transitionend', (e) => {
+    if (e.target !== track || e.propertyName !== 'transform') return;
+    if (trackPos === slideCount + 1){
+      track.style.transition = 'none';
+      trackPos = 1;
+      track.style.transform = `translateX(-${trackPos * 100}%)`;
+      void track.offsetWidth;
+      track.style.transition = '';
+    } else if (trackPos === 0){
+      track.style.transition = 'none';
+      trackPos = slideCount;
+      track.style.transform = `translateX(-${trackPos * 100}%)`;
+      void track.offsetWidth;
+      track.style.transition = '';
+    }
+  });
+
+  // Manual navigation resets the autoplay timer so it doesn't fire
+  // right on the heels of a click the person just made.
+  function userNavigateStep(dir){
+    if (dir > 0) stepNext(); else stepPrev();
+    resetAutoplay();
+  }
+  function userNavigateJump(i){
+    jumpTo(i);
+    resetAutoplay();
+  }
+
+  document.getElementById('prevBtn').addEventListener('click', () => userNavigateStep(-1));
+  document.getElementById('nextBtn').addEventListener('click', () => userNavigateStep(1));
+
+  // Autoplay
+  let autoplayTimer = null;
+  function startAutoplay(){
+    autoplayTimer = setInterval(stepNext, 4000);
+  }
+  function stopAutoplay(){
+    clearInterval(autoplayTimer);
+  }
+  function resetAutoplay(){
+    stopAutoplay();
+    startAutoplay();
+  }
+  startAutoplay();
+
+  // Pause while the person is hovering the carousel or reading a modal
+  const carouselEl = document.querySelector('.carousel');
+  carouselEl.addEventListener('mouseenter', stopAutoplay);
+  carouselEl.addEventListener('mouseleave', startAutoplay);
 
   // Modal / Read more
   const overlay = document.getElementById('modalOverlay');
@@ -504,10 +606,12 @@
     `;
     modalCard.querySelector('#modalCloseBtn').addEventListener('click', closeModal);
     overlay.classList.add('open');
+    stopAutoplay();
   }
 
   function closeModal(){
     overlay.classList.remove('open');
+    startAutoplay();
   }
 
   track.addEventListener('click', (e) => {
@@ -549,8 +653,6 @@
   }
   window.addEventListener('load', sendHeightToParent);
   window.addEventListener('resize', sendHeightToParent);
-  document.getElementById('prevBtn').addEventListener('click', () => setTimeout(sendHeightToParent, 50));
-  document.getElementById('nextBtn').addEventListener('click', () => setTimeout(sendHeightToParent, 50));
 
   // basic swipe support
   let touchStartX = null;
@@ -558,8 +660,8 @@
   track.addEventListener('touchend', e => {
     if(touchStartX===null) return;
     const diff = e.changedTouches[0].clientX - touchStartX;
-    if(diff > 50) goTo(current-1);
-    else if(diff < -50) goTo(current+1);
+    if(diff > 50) userNavigateStep(-1);
+    else if(diff < -50) userNavigateStep(1);
     touchStartX = null;
   });
 </script>
