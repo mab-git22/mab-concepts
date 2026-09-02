@@ -76,7 +76,7 @@
   .slide{
     flex:0 0 100%;
     display:grid;
-    grid-template-columns:1fr 1fr;
+    grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));
     gap:34px;
     padding:46px 40px;
   }
@@ -90,6 +90,7 @@
     padding:34px 32px 28px;
     display:flex;
     flex-direction:column;
+    min-width:0;
     box-shadow:0 25px 50px -12px rgba(0,0,0,.28), 0 8px 22px rgba(0,0,0,.16);
     transition:transform .28s ease, box-shadow .28s ease;
     cursor:default;
@@ -129,7 +130,7 @@
     display:block;
   }
 
-  .card-copy{flex:1;}
+  .card-copy{flex:1; min-width:0;}
 
   .stars{
     color:var(--red);

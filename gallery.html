@@ -84,7 +84,7 @@
   body{
     width:100%;
     min-height:100vh;
-    padding:28px 24px 40px;
+    padding:28px 10px 40px;
     display:flex;
     flex-direction:column;
     align-items:center;
@@ -344,12 +344,12 @@
     .slide{ grid-template-columns:1fr; gap:16px; }
     .tabs{ width:100%; }
     .tab{ flex:1; padding:10px 10px; font-size:11.5px; }
-    body{ padding:20px 12px 32px; }
+    body{ padding:20px 4px 32px; }
     .stage{ padding:0 16px; }
     .nav-btn{ width:40px; height:40px; background:rgba(255,255,255,.75); box-shadow:0 4px 14px rgba(0,0,0,.15); }
     .nav-btn svg{ width:20px; height:20px; }
-    .nav-btn.prev{ left:4px; }
-    .nav-btn.next{ right:4px; }
+    .nav-btn.prev{ left:0; }
+    .nav-btn.next{ right:0; }
   }
 </style>
 </head>
@@ -596,23 +596,23 @@ document.querySelectorAll('.dots').forEach(wrap => {
 });
 
 renderPosition(activePanel());
+updateArrowOverlay();
 
-/* On mobile, overlay the arrows so they sit half on top of the image
-   (like a typical carousel), instead of centered on the whole card. */
+/* Center the arrows on the slide row itself (the cards inside
+   .slide-viewport), not on the full .stage height. .stage also
+   contains the dots strip below the cards, so centering on .stage
+   (the old default) pulled the arrows up above the true middle of
+   the row, making them look pinned near the top. This runs on every
+   screen size so the arrows always sit at the vertical middle of
+   the actual image/card row. */
 function updateArrowOverlay(){
-  const isMobile = window.matchMedia('(max-width: 560px)').matches;
-  if(!isMobile){
-    prevBtn.style.top = '';
-    nextBtn.style.top = '';
-    return;
-  }
   const panel = activePanel();
-  const thumb = panel.querySelector('.thumb');
+  const viewport = panel && panel.querySelector('.slide-viewport');
   const stage = document.querySelector('.stage');
-  if(!thumb || !stage) return;
-  const thumbRect = thumb.getBoundingClientRect();
+  if(!viewport || !stage) return;
+  const viewportRect = viewport.getBoundingClientRect();
   const stageRect = stage.getBoundingClientRect();
-  const top = (thumbRect.top - stageRect.top) + (thumbRect.height / 2);
+  const top = (viewportRect.top - stageRect.top) + (viewportRect.height / 2);
   prevBtn.style.top = top + 'px';
   nextBtn.style.top = top + 'px';
 }
