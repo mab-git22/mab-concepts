@@ -251,6 +251,8 @@
     transition:opacity .2s ease, transform .2s ease;
   }
   .nav-arrow:hover{opacity:1; transform:translateY(-50%) scale(1.1);}
+  .nav-arrow:disabled{opacity:.25; cursor:default;}
+  .nav-arrow:disabled:hover{opacity:.25; transform:translateY(-50%);}
   .nav-arrow svg{width:26px;height:26px;}
   #prevBtn{left:-56px;}
   #nextBtn{right:-56px;}
@@ -487,13 +489,15 @@
     document.querySelectorAll('.dot').forEach((d,i)=>{
       d.classList.toggle('active', i===current);
     });
+    document.getElementById('prevBtn').disabled = current === 0;
+    document.getElementById('nextBtn').disabled = current === slideCount - 1;
     if (typeof sendHeightToParent === 'function') {
       setTimeout(sendHeightToParent, 50);
     }
   }
 
   function goTo(i){
-    current = (i + slideCount) % slideCount;
+    current = Math.max(0, Math.min(slideCount - 1, i));
     update();
   }
 
