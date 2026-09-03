@@ -74,6 +74,10 @@
 
     /* number of grid columns per slide — change here if needed */
     --cols:2;
+
+    /* gap BETWEEN pages/slides when sliding — kept equal to the
+       intra-slide grid gap (22px) below so the spacing matches */
+    --slide-gap:22px;
   }
   *{box-sizing:border-box;}
   html,body{
@@ -162,7 +166,12 @@
   }
   .slide-track{
     display:flex;
+    gap:var(--slide-gap);
     transition:transform .9s cubic-bezier(.65,0,.35,1);
+    /* Each slide is 100% of the viewport, so page N starts N slide-widths
+       plus N gaps from the start. --current (set from JS) is a plain
+       unitless number, which calc() allows multiplying a length by. */
+    transform:translateX(calc(-1 * var(--current, 0) * (100% + var(--slide-gap))));
   }
   .slide{
     flex:0 0 100%;
@@ -344,6 +353,7 @@
 
   /* ---------- Responsive ---------- */
   @media (max-width: 560px){
+    :root{ --slide-gap:16px; }
     .slide{ grid-template-columns:1fr; gap:16px; }
     .tabs{ width:100%; }
     .tab{ flex:1; padding:10px 10px; font-size:11.5px; }
@@ -535,7 +545,7 @@ function activePanel(){
 
 function renderPosition(panel){
   const track = panel.querySelector('.slide-track');
-  track.style.transform = `translateX(-${panel._current * 100}%)`;
+  track.style.setProperty('--current', panel._current);
   panel.querySelectorAll('.dot').forEach((d, i) => {
     d.classList.toggle('active', i === panel._current);
   });
