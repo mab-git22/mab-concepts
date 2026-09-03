@@ -49,6 +49,9 @@
     --c-cyan:#3C4A5E;     /* Color 2 — secondary accent: eyebrow label background */
     --c-ink:#1f1f1f;      /* Color 3 — text, arrows, borders, eyebrow label text */
     --c-white:#ffffff;    /* Color 4 — card + page surfaces */
+    --c-slate:#5C6670;    /* Kicker text + gradient start */
+    --c-slate-light:#F5F6F8; /* Kicker gradient end */
+    --c-card-bg:#1A1A1A;  /* Slide/card box background */
 
     /* Derived tones (kept for contrast/readability, not new colors) */
     --c-ink-soft:rgba(31,31,31,.62);  /* body copy, softer than pure ink */
@@ -170,7 +173,7 @@
   }
 
   .card{
-    background:var(--c-white);
+    background:var(--c-card-bg);
     border:1px solid var(--c-line);
     border-radius:var(--radius);
     overflow:hidden;
@@ -201,8 +204,8 @@
     line-height:var(--kicker-leading);
     text-transform:uppercase;
     font-weight:var(--kicker-weight);
-    color:var(--c-white);
-    background:var(--c-cyan);
+    color:var(--c-slate);
+    background:var(--c-slate-light);
     padding:5px 12px;
     border-radius:12px;
     width:fit-content;
@@ -215,14 +218,14 @@
     line-height:var(--title-leading);
     text-transform:uppercase;
     margin:0;
-    color:#3C4A5E;
+    color:#C1443C;
   }
   .card p{
     font-family:var(--font-body);
     font-size:var(--body-size);
     letter-spacing:var(--body-tracking);
     line-height:var(--body-leading);
-    color:#5C6670;
+    color:#F5F6F8;
     margin:0;
   }
 
