@@ -7,7 +7,7 @@
 <style>
   :root{
     --ink:#1f1f1f;
-    --red:#ea2a2a;
+    --red:#C1443C;
     --grey:#7f7f7f;
     --white:#ffffff;
     --box:#f6f6f8;
@@ -86,7 +86,7 @@
     background:var(--box);
     color:var(--ink);
     border-radius:6px;
-    border:1px solid rgba(234,42,42,.35);
+    border:1px solid rgba(193,68,60,.35);
     padding:34px 32px 28px;
     display:flex;
     flex-direction:column;
@@ -97,7 +97,7 @@
   }
   .card:hover{
     transform:translateY(-3px);
-    box-shadow:0 32px 60px -10px rgba(0,0,0,.32), 0 12px 28px rgba(234,42,42,.18);
+    box-shadow:0 32px 60px -10px rgba(0,0,0,.32), 0 12px 28px rgba(193,68,60,.18);
   }
 
   .card-top{
@@ -134,8 +134,8 @@
 
   .stars{
     color:var(--red);
-    font-size:26px;
-    letter-spacing:6px;
+    font-size:26px;      /* fallback before JS runs; overridden inline per-card width */
+    letter-spacing:6px;  /* fallback before JS runs; overridden inline per-card width */
     margin-bottom:14px;
   }
 
@@ -145,7 +145,7 @@
     font-size:16px;
     letter-spacing:1px;
     line-height:1.6em;
-    color:#3a3a3a;
+    color:#5C6670;
     margin:0;
     display:-webkit-box;
     -webkit-line-clamp:3;
@@ -187,7 +187,7 @@
     font-size:18px;
     line-height:1.6em;
     letter-spacing:1px;
-    color:var(--ink);
+    color:#3C4A5E;
     cursor:pointer;
     position:relative;
   }
@@ -246,7 +246,7 @@
     justify-content:center;
     cursor:pointer;
     z-index:10;
-    color:var(--red);
+    color:#FFFFFF;
     opacity:.85;
     transition:opacity .2s ease, transform .2s ease;
   }
@@ -299,7 +299,7 @@
     width:100%;
     padding:40px 38px 34px;
     position:relative;
-    border:1px solid rgba(234,42,42,.4);
+    border:1px solid rgba(193,68,60,.4);
     box-shadow:0 30px 70px rgba(0,0,0,.5);
     transform:translateY(14px) scale(.97);
     transition:transform .25s ease;
@@ -344,7 +344,7 @@
     .slide{gap:18px; padding:34px 24px;}
     #prevBtn{left:2px;}
     #nextBtn{right:2px;}
-    .nav-arrow{width:36px;height:36px;background:rgba(255,255,255,.7);border-radius:50%;box-shadow:0 4px 14px rgba(0,0,0,.15);}
+    .nav-arrow{width:36px;height:36px;background:rgba(31,31,31,.55);border-radius:50%;box-shadow:0 4px 14px rgba(0,0,0,.15);}
     .nav-arrow svg{width:20px;height:20px;}
   }
 
@@ -355,7 +355,6 @@
     .card{padding:24px 20px 20px;}
     .card-top{gap:16px;}
     .avatar{width:108px;height:108px;min-width:108px;font-size:24px;}
-    .stars{font-size:22px;}
     #prevBtn{left:-4px;}
     #nextBtn{right:-4px;}
     .nav-arrow{width:32px;height:32px;}
@@ -531,6 +530,11 @@
     `;
     modalCard.querySelector('#modalCloseBtn').addEventListener('click', closeModal);
     overlay.classList.add('open');
+    const modalCopyEl = modalCard.querySelector('.card-copy');
+    if(modalCopyEl){
+      sizeStars(modalCopyEl);
+      starResizeObserver.observe(modalCopyEl);
+    }
   }
 
   function closeModal(){
@@ -581,6 +585,54 @@
   window.addEventListener('load', sendHeightToParent);
   setTimeout(sendHeightToParent, 300);
   window.addEventListener('resize', sendHeightToParent);
+
+  // ============================================================
+  // Size the star rating to always fit the space it actually has
+  // (the .card-copy column, i.e. card width minus avatar and gap),
+  // not the viewport. We measure the stars' real rendered width at
+  // full size, then scale down by exactly whatever's needed to fit
+  // — this guarantees no overflow regardless of avatar size, fonts,
+  // or what's making the container narrow. ResizeObserver reports
+  // true layout size changes, so it also catches cases where the
+  // container resizes without the window firing a 'resize' event.
+  // ============================================================
+  const BASE_STAR_SIZE = 26;   // px, matches original desktop design
+  const BASE_LETTER_SPACING = 6; // px, matches original desktop design
+  const MIN_STAR_SIZE = 14;    // never shrink below this
+
+  function sizeStars(copyEl){
+    const starsEl = copyEl.querySelector('.stars');
+    if(!starsEl) return;
+    const containerWidth = copyEl.getBoundingClientRect().width;
+    if(containerWidth === 0) return;
+
+    // Reset to baseline so we can measure its natural, unscaled width
+    starsEl.style.fontSize = BASE_STAR_SIZE + 'px';
+    starsEl.style.letterSpacing = BASE_LETTER_SPACING + 'px';
+    const naturalWidth = starsEl.scrollWidth;
+    if(naturalWidth === 0) return;
+
+    // Small safety margin so it never sits flush against the edge
+    const available = containerWidth * 0.96;
+    const scale = Math.min(1, available / naturalWidth); // never scale ABOVE the base size
+    const newSize = Math.max(MIN_STAR_SIZE, BASE_STAR_SIZE * scale);
+    const sizeScale = newSize / BASE_STAR_SIZE;
+
+    starsEl.style.fontSize = newSize.toFixed(1) + 'px';
+    starsEl.style.letterSpacing = (BASE_LETTER_SPACING * sizeScale).toFixed(1) + 'px';
+  }
+
+  const starResizeObserver = new ResizeObserver(entries => {
+    entries.forEach(entry => sizeStars(entry.target));
+  });
+
+  function watchCardStars(copyEl){
+    sizeStars(copyEl);
+    starResizeObserver.observe(copyEl);
+  }
+
+  // Watch every card's copy column already in the carousel
+  document.querySelectorAll('.card .card-copy').forEach(watchCardStars);
 
   // basic swipe support
   let touchStartX = null;
