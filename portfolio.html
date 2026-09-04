@@ -83,6 +83,9 @@
   html,body{
     margin:0;
     padding:0;
+    overflow-x:hidden; /* the parent iframe uses scrolling="no", so any
+      stray horizontal overflow would just get silently clipped instead
+      of being scrollable — keep the page itself from ever producing one */
     background:transparent !important;
     font-family:var(--font-body);
     color:var(--c-ink);
@@ -358,6 +361,8 @@
   @media (max-width: 900px){
     .stage{ padding:0 44px; }
     .card .body{ padding:14px 22px 22px; }
+    .nav-btn{ width:44px; height:44px; background:rgba(255,255,255,.75); box-shadow:0 4px 14px rgba(0,0,0,.15); }
+    .nav-btn svg{ width:22px; height:22px; }
   }
 
   @media (max-width: 560px){
@@ -639,12 +644,19 @@ function updateArrowOverlay(){
 }
 
 function notifyHeight(){
-  const h = document.body.scrollHeight;
-  parent.postMessage({ type: 'iframeHeight', height: h }, '*');
-  updateArrowOverlay();
+  // Measuring on the next frame (rather than synchronously) makes sure
+  // layout has actually settled after whatever triggered this call —
+  // a resize, a breakpoint flipping the grid from 2 columns to 1, a
+  // newly-loaded image — before we read scrollHeight.
+  requestAnimationFrame(() => {
+    const h = document.body.scrollHeight;
+    parent.postMessage({ type: 'iframeHeight', height: h }, '*');
+    updateArrowOverlay();
+  });
 }
 window.addEventListener('load', notifyHeight);
 window.addEventListener('resize', notifyHeight);
+window.addEventListener('orientationchange', notifyHeight);
 document.querySelectorAll('.thumb').forEach(img => {
   img.addEventListener('load', updateArrowOverlay);
 });
