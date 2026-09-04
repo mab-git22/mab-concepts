@@ -147,7 +147,7 @@
   /* ---------- Stage ---------- */
   .stage{
     width:100%;
-    max-width:1160px;
+    max-width:1360px;
     margin:0 auto;
     padding:0 68px;
     position:relative;
@@ -352,6 +352,14 @@
   }
 
   /* ---------- Responsive ---------- */
+  /* Tablet range: keep the 2-column grid, but claw back some of the
+     fixed 68px arrow padding and card padding so cards aren't
+     squeezed too narrow before the mobile (560px) breakpoint kicks in. */
+  @media (max-width: 900px){
+    .stage{ padding:0 44px; }
+    .card .body{ padding:14px 22px 22px; }
+  }
+
   @media (max-width: 560px){
     :root{ --slide-gap:16px; }
     .slide{ grid-template-columns:1fr; gap:16px; }
@@ -640,6 +648,16 @@ window.addEventListener('resize', notifyHeight);
 document.querySelectorAll('.thumb').forEach(img => {
   img.addEventListener('load', updateArrowOverlay);
 });
+
+/* Belt-and-suspenders for the parent iframe's auto-height: watch the
+   body's actual box size directly, so ANY layout change that alters
+   height — a tablet breakpoint kicking in, a webfont swapping in,
+   a tab switch — gets reported, not just window resize/load. */
+if ('ResizeObserver' in window) {
+  new ResizeObserver(() => notifyHeight()).observe(document.body);
+} else {
+  setInterval(notifyHeight, 500);
+}
 
 /* ---------------------------------------------------------------
    Click-to-preview: hovering a thumbnail just shows a zoom cursor.
