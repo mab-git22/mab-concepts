@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>What to Expect — Strategy Call</title>
+<style>
+  @font-face{
+    font-family:"Mona Sans Display";
+    src: url("https://mab-git22.github.io/mab-concepts/fonts/MonaSansDisplay-Regular.woff") format("woff");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+  }
+  @font-face{
+    font-family:"Mona Sans Display";
+    src: url("https://mab-git22.github.io/mab-concepts/fonts/MonaSansDisplay-Bold.woff2") format("woff2");
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+  }
+  :root{
+    --ink:#3C4A5E;
+    --paper:#ffffff;
+    --line:#E3E7EA;
+    --navy:#3C4A5E;
+    --red:#C1443C;
+    --gray:#5C6670;
+    --lighter-accent:#D1736D;
+    --lighter-slate:#7E8A92;
+    --accent:#C1443C;
+    --accent-soft:#E3E7EA;
+    --leak:#C1443C;
+    --pagination:#7E8A92;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:"Mona Sans Display","Iowan Old Style","Palatino Linotype",Georgia,serif;
+    font-weight:400;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    width:100%;
+    padding:24px;
+    box-sizing:border-box;
+  }
+  .stage-wrap{
+    width:100%;
+    max-width:1180px;
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+    container-type:inline-size;
+    container-name:stage;
+  }
+  .frame{
+    position:relative;
+    width:100%;
+    aspect-ratio:1180/660;
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:18px;
+    overflow:hidden;
+    box-shadow:0 20px 60px -20px rgba(0,0,0,0.25);
+  }
+  .scene{
+    position:absolute;
+    inset:0;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    padding:7% 10%;
+    opacity:0;
+    transform:translateY(14px);
+    transition:opacity .5s ease, transform .5s ease;
+    pointer-events:none;
+  }
+  .scene.active{
+    opacity:1;
+    transform:translateY(0);
+    pointer-events:auto;
+  }
+  .scene.split{
+    flex-direction:row;
+    align-items:center;
+    justify-content:center;
+    gap:6%;
+    text-align:left;
+    padding-left:6%;
+    padding-right:6%;
+  }
+  .scene.split .split-text{
+    flex:1 1 52%;
+    min-width:0;
+  }
+  .scene.split .split-visual{
+    flex:0 1 40%;
+    min-width:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .scene.split .headline{
+    text-align:left;
+  }
+  .scene.split .eyebrow{
+    text-align:left;
+  }
+  .scene.split .photo-frame{
+    margin-top:0;
+    width:100%;
+    max-width:none;
+  }
+  .scene.split .checklist{
+    margin-top:0;
+  }
+  .eyebrow{
+    font-family:"Mona Sans Display","Helvetica Neue",Arial,sans-serif;
+    font-weight:400;
+    font-size:clamp(10px,1.15cqw,14px);
+    letter-spacing:.04em;
+    color:var(--accent);
+    margin-bottom:clamp(6px,1.2cqw,14px);
+    font-weight:600;
+  }
+  .headline{
+    font-family:"Mona Sans Display","Iowan Old Style","Palatino Linotype",Georgia,serif;
+    font-weight:700;
+    color:var(--ink);
+    font-size:clamp(18px,3.4cqw,40px);
+    line-height:1.28;
+    margin:0;
+  }
+  .accentword{color:var(--navy);font-style:italic;}
+  .leakword{color:var(--leak);}
+  .logo{
+    height:clamp(16px,3.6cqw,30px);
+    width:auto;
+    display:block;
+    margin-bottom:clamp(8px,1.6cqw,18px);
+  }
+  .logo-big{
+    height:clamp(28px,6.5cqw,56px);
+    width:auto;
+    display:block;
+    margin-top:clamp(12px,3cqw,26px);
+  }
+  .subtext{
+    font-family:"Mona Sans Display","Helvetica Neue",Arial,sans-serif;
+    font-weight:400;
+    font-size:24px;
+    line-height:1.5;
+    color:var(--gray);
+    margin-top:clamp(8px,1.8cqw,16px);
+    max-width:34ch;
+  }
+  .photo-frame{
+    width:100%;
+    max-width:380px;
+    margin-top:clamp(8px,2cqw,18px);
+    border-radius:12px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+  }
+  .photo-frame img{
+    width:100%;
+    height:auto;
+    display:block;
+    border-radius:12px;
+  }
+  .photo-frame-label{
+    font-family:"Mona Sans Display","Helvetica Neue",Arial,sans-serif;
+    font-weight:400;
+    font-size:clamp(11px,1.1cqw,14px);
+    color:var(--pagination);
+  }
+  .checklist{
+    text-align:left;
+    font-family:"Mona Sans Display","Helvetica Neue",Arial,sans-serif;
+    font-weight:400;
+    font-size:24px;
+    color:var(--gray);
+    margin-top:clamp(8px,2cqw,18px);
+    display:flex;
+    flex-direction:column;
+    gap:clamp(5px,1.1cqw,10px);
+  }
+  .checklist li{
+    list-style:none;
+    display:flex;
+    align-items:center;
+    gap:clamp(5px,1.1cqw,10px);
+    opacity:0;
+    transform:translateX(-8px);
+    transition:opacity .4s ease, transform .4s ease;
+  }
+  .checklist li.show{opacity:1;transform:translateX(0);}
+  .checklist li::before{
+    content:"";
+    width:7px;height:7px;
+    border-radius:50%;
+    background:var(--accent);
+    flex-shrink:0;
+  }
+  .brandmark{
+    font-family:"Mona Sans Display","Helvetica Neue",Arial,sans-serif;
+    font-weight:400;
+    font-size:clamp(11px,1.2cqw,15px);
+    letter-spacing:.02em;
+    color:var(--accent);
+    font-weight:600;
+    margin-top:clamp(10px,2.4cqw,22px);
+  }
+  .progress-row{
+    display:flex;
+    gap:5px;
+  }
+  .progress-seg{
+    flex:1;
+    height:3px;
+    background:var(--line);
+    border-radius:2px;
+    overflow:hidden;
+  }
+  .progress-seg > i{
+    display:block;
+    height:100%;
+    width:0%;
+    background:var(--pagination);
+    transition:width linear;
+  }
+  .controls{
+    display:flex;
+    justify-content:center;
+    gap:10px;
+  }
+  button{
+    font-family:"Mona Sans Display","Helvetica Neue",Arial,sans-serif;
+    font-weight:400;
+    font-size:clamp(12px,1.1cqw,14px);
+    padding:8px 16px;
+    border-radius:20px;
+    border:1px solid var(--line);
+    background:transparent;
+    color:var(--gray);
+    cursor:pointer;
+  }
+  button:hover{border-color:var(--red);color:var(--red);}
+
+  /* ---- Mobile responsive stacking layout ---- */
+  @container stage (max-width: 680px){
+    body{padding:12px;}
+    .frame{
+      aspect-ratio:auto;
+      min-height:auto;
+    }
+    .scene{
+      position:relative;
+      inset:auto;
+      display:none;
+      padding:9% 7%;
+      opacity:1;
+      transform:none;
+      pointer-events:none;
+    }
+    .scene.active{
+      display:flex;
+      pointer-events:auto;
+    }
+    .scene.split{
+      flex-direction:column;
+      align-items:center;
+      justify-content:flex-start;
+      gap:20px;
+      text-align:center;
+      padding-left:7%;
+      padding-right:7%;
+    }
+    .scene.split .split-text{
+      flex:0 0 auto;
+      width:100%;
+      order:1;
+    }
+    .scene.split .split-visual{
+      flex:0 0 auto;
+      width:100%;
+      order:2;
+    }
+    .scene.split .headline{
+      text-align:center;
+    }
+    .scene.split .eyebrow{
+      text-align:center;
+    }
+    .scene.split .photo-frame{
+      max-width:280px;
+      margin-left:auto;
+      margin-right:auto;
+    }
+    .scene.split .checklist{
+      align-items:center;
+      margin-left:auto;
+      margin-right:auto;
+      width:fit-content;
+    }
+    .checklist li{
+      justify-content:flex-start;
+    }
+    .headline{
+      font-size:clamp(20px,6.2vw,28px);
+      line-height:1.32;
+    }
+    .subtext{
+      font-size:18px;
+      max-width:none;
+    }
+    .checklist{
+      font-size:18px;
+    }
+    .controls{
+      flex-wrap:wrap;
+      row-gap:8px;
+    }
+    .logo-big{
+      height:26px;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="stage-wrap">
+  <div class="frame" id="frame">
+
+    <div class="scene" data-scene="0">
+      <img class="logo" src="https://mab-git22.github.io/mab-concepts/images/mabconcepts-logo-white-text.png" alt="MAB Concepts">
+      <div class="eyebrow">FREE STRATEGY CALL</div>
+      <h1 class="headline">Your leads are worth<br>more than you think.</h1>
+    </div>
+
+    <div class="scene split" data-scene="1">
+      <div class="split-text">
+        <h1 class="headline">But most businesses lose them somewhere between the <span class="leakword">first click</span> and the <span class="accentword">first conversation</span>.</h1>
+      </div>
+      <!--
+        PHOTO GOES HERE: this artifact must stay a single self-contained file,
+        so no live/external photo can be embedded automatically. Swap the src
+        below for a base64 data URI of your own photo (e.g. a phone ringing
+        unanswered, or a lead notification going ignored) and it will render
+        exactly where this placeholder sits.
+      -->
+      <div class="split-visual">
+        <div class="photo-frame">
+          <img src="https://mab-git22.github.io/mab-concepts/images/funnel-illustration.png" alt="Illustration of a funnel with leads falling out">
+        </div>
+      </div>
+    </div>
+
+    <div class="scene split" data-scene="2">
+      <div class="split-text">
+        <div class="eyebrow">HERE'S WHAT WE'LL DO</div>
+        <h1 class="headline">A full audit of how your funnel handles incoming leads.</h1>
+      </div>
+      <div class="split-visual">
+        <ul class="checklist" id="checklist">
+          <li>Phone calls</li>
+          <li>Form submissions</li>
+          <li>Website inquiries</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="scene" data-scene="3">
+      <h1 class="headline">We'll pinpoint exactly where<br>potential customers are<br><span class="leakword">falling out of your pipeline</span>.</h1>
+    </div>
+
+    <div class="scene" data-scene="4">
+      <h1 class="headline">No sales pitch.</h1>
+      <p class="subtext">Just an honest look at what's working — and what's quietly costing you customers.</p>
+    </div>
+
+    <div class="scene" data-scene="5">
+      <h1 class="headline">By the end of the call,<br>you'll know exactly<br><span class="accentword">where you stand</span> —<br>and what to fix first.</h1>
+    </div>
+
+    <div class="scene" data-scene="6">
+      <div class="eyebrow">READY WHEN YOU ARE</div>
+      <h1 class="headline">Let's find those gaps,<br>and close them.</h1>
+      <img class="logo-big" src="https://mab-git22.github.io/mab-concepts/images/mabconcepts-logo-white-text.png" alt="MAB Concepts">
+    </div>
+
+  </div>
+
+  <div class="progress-row" id="progressRow"></div>
+
+  <div class="controls">
+    <button id="playBtn">Pause</button>
+    <button id="restartBtn">Restart</button>
+    <button id="soundBtn">Sound: Off</button>
+  </div>
+</div>
+
+<script>
+const scenes = document.querySelectorAll('.scene');
+const durations = [4200, 5200, 5600, 4600, 4400, 5200, 4600]; // ms per scene
+const progressRow = document.getElementById('progressRow');
+const checklist = document.getElementById('checklist');
+let current = 0;
+let playing = true;
+let timer = null;
+let segBars = [];
+let segmentElapsed = 0;    // ms already played in the current segment
+let segmentStartedAt = 0;  // performance.now() when the current run started
+
+durations.forEach(()=>{
+  const seg = document.createElement('div');
+  seg.className = 'progress-seg';
+  const fill = document.createElement('i');
+  seg.appendChild(fill);
+  progressRow.appendChild(seg);
+  segBars.push(fill);
+});
+
+function showScene(i){
+  scenes.forEach(s=>s.classList.remove('active'));
+  scenes[i].classList.add('active');
+  segBars.forEach((f,idx)=>{
+    f.style.transition = 'none';
+    f.style.width = idx < i ? '100%' : '0%';
+  });
+  if(i === 2){
+    const items = checklist.querySelectorAll('li');
+    items.forEach(li=>li.classList.remove('show'));
+    items.forEach((li,idx)=>{
+      setTimeout(()=>li.classList.add('show'), 500 + idx*450);
+    });
+  }
+}
+
+// Animates segment i's fill from fromPercent up to 100% over `dur` ms.
+function animateSeg(i, dur, fromPercent){
+  const f = segBars[i];
+  f.style.transition = 'none';
+  f.style.width = (fromPercent || 0) + '%';
+  // Force a reflow so the browser registers the starting width before
+  // the transition is enabled — otherwise it can skip straight to 100%.
+  void f.offsetWidth;
+  requestAnimationFrame(()=>{
+    f.style.transition = `width ${dur}ms linear`;
+    f.style.width = '100%';
+  });
+}
+
+function next(){
+  current = (current + 1) % scenes.length;
+  segmentElapsed = 0;
+  showScene(current);
+  animateSeg(current, durations[current], 0);
+  scheduleNext(durations[current]);
+}
+
+// Schedules the transition to the next scene after `remaining` ms.
+function scheduleNext(remaining){
+  clearTimeout(timer);
+  if(playing){
+    segmentStartedAt = performance.now();
+    timer = setTimeout(next, remaining);
+  }
+}
+
+function start(){
+  segmentElapsed = 0;
+  showScene(current);
+  animateSeg(current, durations[current], 0);
+  scheduleNext(durations[current]);
+}
+
+document.getElementById('playBtn').addEventListener('click', (e)=>{
+  playing = !playing;
+  e.target.textContent = playing ? 'Pause' : 'Play';
+  if(playing){
+    // Resume instantly from exactly where we left off — no restart,
+    // no waiting for the full scene duration again.
+    const remaining = Math.max(durations[current] - segmentElapsed, 0);
+    const percent = Math.min(100, (segmentElapsed / durations[current]) * 100);
+    animateSeg(current, remaining, percent);
+    scheduleNext(remaining);
+  } else {
+    // Freeze immediately: stop the scheduled scene change and lock the
+    // progress bar at its exact current percentage (not a snapped value).
+    clearTimeout(timer);
+    segmentElapsed = Math.min(
+      durations[current],
+      segmentElapsed + (performance.now() - segmentStartedAt)
+    );
+    const percent = Math.min(100, (segmentElapsed / durations[current]) * 100);
+    segBars[current].style.transition = 'none';
+    segBars[current].style.width = percent + '%';
+  }
+  applyAudioGain();
+});
+
+document.getElementById('restartBtn').addEventListener('click', ()=>{
+  current = 0;
+  playing = true;
+  document.getElementById('playBtn').textContent = 'Pause';
+  start();
+  applyAudioGain();
+});
+
+/* Ambient background sound */
+let audioCtx = null;
+let masterGain = null;
+let soundOn = false;
+
+function initAudio(){
+  if(audioCtx) return;
+  try{
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }catch(e){ return; }
+
+  masterGain = audioCtx.createGain();
+  masterGain.gain.value = 0;
+  masterGain.connect(audioCtx.destination);
+
+  const filter = audioCtx.createBiquadFilter();
+  filter.type = 'lowpass';
+  filter.frequency.value = 900;
+  filter.connect(masterGain);
+
+  // Warm, slow-moving pad: sub bass + soft triad, each with gentle vibrato
+  const voices = [
+    { freq: 65.41,  gain: 0.30, vibrato: 0.04 }, // C2 (sub warmth)
+    { freq: 130.81, gain: 0.16, vibrato: 0.05 }, // C3
+    { freq: 196.00, gain: 0.10, vibrato: 0.06 }, // G3
+    { freq: 261.63, gain: 0.07, vibrato: 0.07 }  // C4 (soft top shimmer)
+  ];
+
+  voices.forEach(v=>{
+    const osc = audioCtx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.value = v.freq;
+
+    const oscGain = audioCtx.createGain();
+    oscGain.gain.value = v.gain;
+
+    osc.connect(oscGain);
+    oscGain.connect(filter);
+    osc.start();
+
+    // Slow pitch drift for a living, non-static pad
+    const lfo = audioCtx.createOscillator();
+    lfo.frequency.value = v.vibrato;
+    const lfoGain = audioCtx.createGain();
+    lfoGain.gain.value = v.freq * 0.006;
+    lfo.connect(lfoGain);
+    lfoGain.connect(osc.frequency);
+    lfo.start();
+  });
+}
+
+function targetGain(){
+  return (soundOn && playing) ? 0.06 : 0;
+}
+
+function applyAudioGain(duration){
+  if(!audioCtx) return;
+  const now = audioCtx.currentTime;
+  masterGain.gain.cancelScheduledValues(now);
+  masterGain.gain.setValueAtTime(masterGain.gain.value, now);
+  masterGain.gain.linearRampToValueAtTime(targetGain(), now + (duration ?? 1.0));
+}
+
+document.getElementById('soundBtn').addEventListener('click', (e)=>{
+  soundOn = !soundOn;
+  e.target.textContent = soundOn ? 'Sound: On' : 'Sound: Off';
+  initAudio();
+  if(audioCtx && audioCtx.state === 'suspended'){
+    audioCtx.resume();
+  }
+  applyAudioGain(soundOn ? 1.2 : 0.6);
+});
+
+start();
+
+/* ---- Embeddable-page support: report height to parent when framed ----
+   Uses the same postMessage contract ({type:'iframeHeight', height})
+   as the portfolio embed, so the same GHL embed snippet pattern works
+   here unchanged. ---- */
+(function(){
+  if(window.self === window.top) return; // not embedded, nothing to do
+
+  var lastHeight = 0;
+  function reportHeight(){
+    var h = Math.ceil(document.documentElement.getBoundingClientRect().height);
+    if(h !== lastHeight){
+      lastHeight = h;
+      try{
+        window.parent.postMessage({ type: 'iframeHeight', height: h }, '*');
+      }catch(e){}
+    }
+  }
+
+  reportHeight();
+  window.addEventListener('load', reportHeight);
+  window.addEventListener('resize', reportHeight);
+  if(window.ResizeObserver){
+    new ResizeObserver(reportHeight).observe(document.documentElement);
+  } else {
+    setInterval(reportHeight, 500);
+  }
+})();
+</script>
+
+</body>
+</html>

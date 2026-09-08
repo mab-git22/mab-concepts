@@ -2,15 +2,11 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="robots" content="noindex, nofollow">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Portfolio Showcase</title>
 
-<!--
-  ============ CUSTOM FONTS: MONA SANS DISPLAY ============
-  Each static weight is its own file, so each gets its own @font-face
-  rule sharing the same font-family name. The browser picks the right
-  file automatically based on the font-weight you set elsewhere.
--->
+<!-- ============ CUSTOM FONTS: MONA SANS DISPLAY ============ -->
 <style>
   @font-face {
     font-family: 'Mona Sans Display';
@@ -44,7 +40,7 @@
 
 <style>
   :root{
-    /* ============ YOUR BRAND COLORS ============ */
+    /* ============ BRAND COLORS ============ */
     --c-red:#C1443C;      /* Color 1 — primary accent: active tab, hover states, active dot */
     --c-cyan:#3C4A5E;     /* Color 2 — secondary accent: eyebrow label background */
     --c-ink:#1f1f1f;      /* Color 3 — text, arrows, borders, eyebrow label text */
@@ -58,7 +54,7 @@
     --c-line:rgba(31,31,31,.14);      /* hairline borders */
     --c-tabs-bg:rgba(31,31,31,.06);   /* pill tray behind the tabs */
 
-    /* ============ YOUR FONTS — EDIT FREELY ============ */
+    /* ============ FONTS — EDIT FREELY ============ */
     /* Fall back to system fonts until your real files are uploaded and
        the @font-face blocks above point to them. Once ready, change the
        first name in each stack to match your @font-face font-family. */
@@ -83,9 +79,7 @@
   html,body{
     margin:0;
     padding:0;
-    overflow-x:hidden; /* the parent iframe uses scrolling="no", so any
-      stray horizontal overflow would just get silently clipped instead
-      of being scrollable — keep the page itself from ever producing one */
+    overflow-x:hidden;
     background:transparent !important;
     font-family:var(--font-body);
     color:var(--c-ink);
@@ -288,8 +282,6 @@
   .dot.active{ background:var(--c-red); width:20px; border-radius:4px; }
 
   /* ---------- Click-to-preview ---------- */
-  /* Default: no special cursor. Only switches to zoom-in once JS confirms
-     the "-full" image actually exists (see .has-preview below). */
   .card .thumb{ cursor: default; }
   .card .thumb.has-preview{ cursor: zoom-in; }
   #preview-backdrop{
@@ -354,10 +346,6 @@
     #hover-preview-scroll{ max-height:90vh; }
   }
 
-  /* ---------- Responsive ---------- */
-  /* Tablet range: keep the 2-column grid, but claw back some of the
-     fixed 68px arrow padding and card padding so cards aren't
-     squeezed too narrow before the mobile (560px) breakpoint kicks in. */
   @media (max-width: 900px){
     .stage{ padding:0 44px; }
     .card .body{ padding:14px 22px 22px; }
@@ -435,25 +423,7 @@
 </div>
 
 <script>
-/* ---------------------------------------------------------------
-   REPLACE the image src, title and paragraph text below with your
-   own content. "img" accepts any image URL (upload your images
-   somewhere and paste the link here).
 
-   The floating hover popup automatically looks for a full-size
-   version of each image named with a "-full" suffix in the same
-   folder, e.g. "images/web1.webp" -> "images/web1-full.webp".
-   You don't need to add anything per item — just make sure that
-   "-full" file exists alongside the thumbnail. If it's missing,
-   the popup falls back to the thumbnail itself.
-
-   (You can still override this for a single item by adding a
-   "preview" field with an exact path, which always wins.)
-
-   Funnel Designs and Web Designs are locked to exactly 2 slides
-   each (2 items per slide x 2 slides = 4 items). If you add or
-   remove items, keep each list at 4 items to stay at 2 slides.
---------------------------------------------------------------- */
 const FUNNEL_ITEMS = [
   { img:"images/funnel1-placeholder.webp", kicker:"Funnel design", title:"HVAC Services", text:"A 3-step booking flow built to turn local HVAC search traffic into booked service calls — live within a week of kickoff." },
   { img:"images/funnel2-placeholder.webp", kicker:"Funnel design", title:"Beauty Salon", text:"Landing, booking, and confirmation pages designed to turn beauty searches into booked appointments." },
@@ -479,8 +449,6 @@ function chunk(arr, size){
   return out;
 }
 
-/* Derives "images/web1.webp" -> "images/web1-full.webp" so you don't
-   have to type a "preview" path for every item by hand. */
 function deriveFullSrc(src){
   const dot = src.lastIndexOf('.');
   if (dot === -1) return src + '-full';
@@ -519,11 +487,6 @@ function buildPanel(key){
 
 ['all','funnel','web'].forEach(buildPanel);
 
-/* Warm the browser cache for every "-full" preview image shortly after
-   load, so clicking a thumbnail later shows the popup instantly instead
-   of waiting on a network fetch. While we're at it, only mark a thumb as
-   "has-preview" (zoom cursor) once we've confirmed its "-full" image
-   actually loads — otherwise it keeps the normal cursor. */
 function preloadFullImages(){
   const bySrc = new Map(); // preview src -> [thumb elements using it]
   document.querySelectorAll('.thumb').forEach(t => {
@@ -624,13 +587,6 @@ document.querySelectorAll('.dots').forEach(wrap => {
 renderPosition(activePanel());
 updateArrowOverlay();
 
-/* Center the arrows on the slide row itself (the cards inside
-   .slide-viewport), not on the full .stage height. .stage also
-   contains the dots strip below the cards, so centering on .stage
-   (the old default) pulled the arrows up above the true middle of
-   the row, making them look pinned near the top. This runs on every
-   screen size so the arrows always sit at the vertical middle of
-   the actual image/card row. */
 function updateArrowOverlay(){
   const panel = activePanel();
   const viewport = panel && panel.querySelector('.slide-viewport');
@@ -644,10 +600,6 @@ function updateArrowOverlay(){
 }
 
 function notifyHeight(){
-  // Measuring on the next frame (rather than synchronously) makes sure
-  // layout has actually settled after whatever triggered this call —
-  // a resize, a breakpoint flipping the grid from 2 columns to 1, a
-  // newly-loaded image — before we read scrollHeight.
   requestAnimationFrame(() => {
     const h = document.body.scrollHeight;
     parent.postMessage({ type: 'iframeHeight', height: h }, '*');
@@ -661,22 +613,12 @@ document.querySelectorAll('.thumb').forEach(img => {
   img.addEventListener('load', updateArrowOverlay);
 });
 
-/* Belt-and-suspenders for the parent iframe's auto-height: watch the
-   body's actual box size directly, so ANY layout change that alters
-   height — a tablet breakpoint kicking in, a webfont swapping in,
-   a tab switch — gets reported, not just window resize/load. */
 if ('ResizeObserver' in window) {
   new ResizeObserver(() => notifyHeight()).observe(document.body);
 } else {
   setInterval(notifyHeight, 500);
 }
 
-/* ---------------------------------------------------------------
-   Click-to-preview: hovering a thumbnail just shows a zoom cursor.
-   Clicking it opens a larger version centered on screen, with a
-   light dimmed backdrop behind it. Closed via the × button, the
-   backdrop, or the Escape key.
---------------------------------------------------------------- */
 {
   const backdrop = document.getElementById('preview-backdrop');
   const preview = document.getElementById('hover-preview');
@@ -711,8 +653,6 @@ if ('ResizeObserver' in window) {
     probe.src = fullSrc;
   });
 
-  // The backdrop sits behind the popup and covers the full viewport,
-  // so clicking anywhere outside the popup reliably closes it.
   backdrop.addEventListener('click', hidePreview);
 
   closeBtn.addEventListener('click', (e) => {
@@ -724,9 +664,6 @@ if ('ResizeObserver' in window) {
     if (e.key === 'Escape' && activeThumb) hidePreview();
   });
 
-  // This page is likely embedded in an iframe. A click outside the
-  // iframe (on the parent page) can't be seen directly from in here,
-  // but it does blur this window — so use that as the outside-click signal.
   window.addEventListener('blur', () => {
     if (activeThumb) hidePreview();
   });

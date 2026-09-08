@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="robots" content="noindex, nofollow">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Client Testimonials</title>
 <style>
@@ -570,10 +571,6 @@
     }
   });
 
-  // Always report the widget's real, measured content height so the
-  // iframe is sized to exactly fit — never clipping content (which was
-  // hiding the dots on desktop) and never leaving unexplained empty
-  // space (which showed up as a gap above the slider on the page).
   function sendHeightToParent(){
     if (window.parent && window.parent !== window) {
       window.parent.postMessage(
@@ -586,16 +583,6 @@
   setTimeout(sendHeightToParent, 300);
   window.addEventListener('resize', sendHeightToParent);
 
-  // ============================================================
-  // Size the star rating to always fit the space it actually has
-  // (the .card-copy column, i.e. card width minus avatar and gap),
-  // not the viewport. We measure the stars' real rendered width at
-  // full size, then scale down by exactly whatever's needed to fit
-  // — this guarantees no overflow regardless of avatar size, fonts,
-  // or what's making the container narrow. ResizeObserver reports
-  // true layout size changes, so it also catches cases where the
-  // container resizes without the window firing a 'resize' event.
-  // ============================================================
   const BASE_STAR_SIZE = 26;   // px, matches original desktop design
   const BASE_LETTER_SPACING = 6; // px, matches original desktop design
   const MIN_STAR_SIZE = 14;    // never shrink below this
