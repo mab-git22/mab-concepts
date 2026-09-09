@@ -409,6 +409,8 @@
     <button id="playBtn">Pause</button>
     <button id="restartBtn">Restart</button>
   </div>
+
+  <audio id="bgAudio" src="https://mab-git22.github.io/mab-concepts/audio/explainer-audio-bgsound.mp3" preload="auto"></audio>
 </div>
 
 <script>
@@ -463,7 +465,18 @@ function animateSeg(i, dur, fromPercent){
 }
 
 function next(){
-  current = (current + 1) % scenes.length;
+  if(current >= scenes.length - 1){
+    // Reached the last scene — stop here instead of looping back to
+    // scene 0, and fade the background audio out with it.
+    clearTimeout(timer);
+    playing = false;
+    document.getElementById('playBtn').textContent = 'Play';
+    segBars[current].style.transition = 'none';
+    segBars[current].style.width = '100%';
+    stopBgAudioForEnd();
+    return;
+  }
+  current = current + 1;
   segmentElapsed = 0;
   showScene(current);
   animateSeg(current, durations[current], 0);
@@ -496,6 +509,7 @@ document.getElementById('playBtn').addEventListener('click', (e)=>{
     const percent = Math.min(100, (segmentElapsed / durations[current]) * 100);
     animateSeg(current, remaining, percent);
     scheduleNext(remaining);
+    playBgAudio();
   } else {
     // Freeze immediately: stop the scheduled scene change and lock the
     // progress bar at its exact current percentage (not a snapped value).
@@ -507,6 +521,7 @@ document.getElementById('playBtn').addEventListener('click', (e)=>{
     const percent = Math.min(100, (segmentElapsed / durations[current]) * 100);
     segBars[current].style.transition = 'none';
     segBars[current].style.width = percent + '%';
+    pauseBgAudio();
   }
 });
 
@@ -515,9 +530,63 @@ document.getElementById('restartBtn').addEventListener('click', ()=>{
   playing = true;
   document.getElementById('playBtn').textContent = 'Pause';
   start();
+  restartBgAudio();
 });
 
+/* ---- Background audio: fade in on start, fade out at the end, no
+   looping. Volume is capped at 50%. ---- */
+const bgAudio = document.getElementById('bgAudio');
+const BG_VOLUME = 0.5;   // 50%
+const FADE_MS = 1500;
+bgAudio.volume = 0;
+
+let fadeRAF = null;
+function fadeAudio(toVolume, duration, onDone){
+  cancelAnimationFrame(fadeRAF);
+  const fromVolume = bgAudio.volume;
+  const startTime = performance.now();
+  (function step(now){
+    const t = Math.min(1, (now - startTime) / duration);
+    bgAudio.volume = fromVolume + (toVolume - fromVolume) * t;
+    if(t < 1){
+      fadeRAF = requestAnimationFrame(step);
+    } else if(onDone){
+      onDone();
+    }
+  })(startTime);
+}
+
+function playBgAudio(){
+  const p = bgAudio.play();
+  if(p && p.catch){
+    p.catch(()=>{
+      // Autoplay blocked by the browser — start on the first
+      // interaction instead (common in iframes/embeds).
+      const resume = ()=>{ bgAudio.play().catch(()=>{}); };
+      document.addEventListener('pointerdown', resume, { once:true });
+      document.addEventListener('keydown', resume, { once:true });
+    });
+  }
+  fadeAudio(BG_VOLUME, FADE_MS);
+}
+
+function pauseBgAudio(){
+  fadeAudio(0, FADE_MS, ()=>{ bgAudio.pause(); });
+}
+
+function stopBgAudioForEnd(){
+  fadeAudio(0, FADE_MS, ()=>{ bgAudio.pause(); });
+}
+
+function restartBgAudio(){
+  bgAudio.pause();
+  bgAudio.currentTime = 0;
+  bgAudio.volume = 0;
+  playBgAudio();
+}
+
 start();
+playBgAudio();
 
 /* ---- Embeddable-page support: report height to parent when framed ----
    Uses the same postMessage contract ({type:'iframeHeight', height})
