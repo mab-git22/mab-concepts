@@ -2,7 +2,6 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="robots" content="noindex, nofollow">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>What to Expect — Strategy Call</title>
 <style>
@@ -45,7 +44,7 @@
     align-items:center;
     justify-content:center;
     width:100%;
-    padding:24px;
+    padding:120px 24px;
     box-sizing:border-box;
   }
   .stage-wrap{
@@ -255,9 +254,21 @@
   }
   button:hover{border-color:var(--red);color:var(--red);}
 
+  /* ---- Tablet + mobile: shrink paragraph/bullet text (top/bottom
+     page padding stays a fixed 120px at every viewport size) ---- */
+  @container stage (max-width: 1024px){
+    .subtext{
+      font-size:18px;
+      max-width:none;
+    }
+    .checklist{
+      font-size:18px;
+    }
+  }
+
   /* ---- Mobile responsive stacking layout ---- */
   @container stage (max-width: 680px){
-    body{padding:12px;}
+    body{padding-left:12px; padding-right:12px;}
     .frame{
       aspect-ratio:auto;
       min-height:auto;
@@ -318,13 +329,6 @@
       font-size:clamp(20px,6.2vw,28px);
       line-height:1.32;
     }
-    .subtext{
-      font-size:18px;
-      max-width:none;
-    }
-    .checklist{
-      font-size:18px;
-    }
     .controls{
       flex-wrap:wrap;
       row-gap:8px;
@@ -359,7 +363,7 @@
       -->
       <div class="split-visual">
         <div class="photo-frame">
-          <img src="https://mab-git22.github.io/mab-concepts/images/funnel-illustration.png" alt="Illustration of a funnel with leads falling out">
+          <img src="https://mab-git22.github.io/mab-concepts/images/funnel-illustration.png" alt="Funnel illustration showing 100 people at the first click narrowing down to 2-3 people at the first conversation, a 90% drop-off">
         </div>
       </div>
     </div>
@@ -404,7 +408,6 @@
   <div class="controls">
     <button id="playBtn">Pause</button>
     <button id="restartBtn">Restart</button>
-    <button id="soundBtn">Sound: Off</button>
   </div>
 </div>
 
@@ -505,7 +508,6 @@ document.getElementById('playBtn').addEventListener('click', (e)=>{
     segBars[current].style.transition = 'none';
     segBars[current].style.width = percent + '%';
   }
-  applyAudioGain();
 });
 
 document.getElementById('restartBtn').addEventListener('click', ()=>{
@@ -513,80 +515,6 @@ document.getElementById('restartBtn').addEventListener('click', ()=>{
   playing = true;
   document.getElementById('playBtn').textContent = 'Pause';
   start();
-  applyAudioGain();
-});
-
-/* Ambient background sound */
-let audioCtx = null;
-let masterGain = null;
-let soundOn = false;
-
-function initAudio(){
-  if(audioCtx) return;
-  try{
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  }catch(e){ return; }
-
-  masterGain = audioCtx.createGain();
-  masterGain.gain.value = 0;
-  masterGain.connect(audioCtx.destination);
-
-  const filter = audioCtx.createBiquadFilter();
-  filter.type = 'lowpass';
-  filter.frequency.value = 900;
-  filter.connect(masterGain);
-
-  // Warm, slow-moving pad: sub bass + soft triad, each with gentle vibrato
-  const voices = [
-    { freq: 65.41,  gain: 0.30, vibrato: 0.04 }, // C2 (sub warmth)
-    { freq: 130.81, gain: 0.16, vibrato: 0.05 }, // C3
-    { freq: 196.00, gain: 0.10, vibrato: 0.06 }, // G3
-    { freq: 261.63, gain: 0.07, vibrato: 0.07 }  // C4 (soft top shimmer)
-  ];
-
-  voices.forEach(v=>{
-    const osc = audioCtx.createOscillator();
-    osc.type = 'sine';
-    osc.frequency.value = v.freq;
-
-    const oscGain = audioCtx.createGain();
-    oscGain.gain.value = v.gain;
-
-    osc.connect(oscGain);
-    oscGain.connect(filter);
-    osc.start();
-
-    // Slow pitch drift for a living, non-static pad
-    const lfo = audioCtx.createOscillator();
-    lfo.frequency.value = v.vibrato;
-    const lfoGain = audioCtx.createGain();
-    lfoGain.gain.value = v.freq * 0.006;
-    lfo.connect(lfoGain);
-    lfoGain.connect(osc.frequency);
-    lfo.start();
-  });
-}
-
-function targetGain(){
-  return (soundOn && playing) ? 0.06 : 0;
-}
-
-function applyAudioGain(duration){
-  if(!audioCtx) return;
-  const now = audioCtx.currentTime;
-  masterGain.gain.cancelScheduledValues(now);
-  masterGain.gain.setValueAtTime(masterGain.gain.value, now);
-  masterGain.gain.linearRampToValueAtTime(targetGain(), now + (duration ?? 1.0));
-}
-
-document.getElementById('soundBtn').addEventListener('click', (e)=>{
-  soundOn = !soundOn;
-  e.target.textContent = soundOn ? 'Sound: On' : 'Sound: Off';
-  initAudio();
-  if(audioCtx && audioCtx.state === 'suspended'){
-    audioCtx.resume();
-  }
-  applyAudioGain(soundOn ? 1.2 : 0.6);
 });
 
 start();
