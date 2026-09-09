@@ -596,6 +596,15 @@ function unlockBgAudio(){
   document.addEventListener(evt, unlockBgAudio, { once:true, capture:true });
 });
 
+// Also unlock when the *parent* page reports an interaction — a click
+// on the surrounding GHL page never reaches this document directly
+// (events don't cross the iframe boundary), so the embed snippet
+// relays it here via postMessage. See _strategy-call-embed-snippet.html.
+window.addEventListener('message', function(e){
+  if(!e.data || e.data.type !== 'mab-strategy-unlock-audio') return;
+  unlockBgAudio();
+});
+
 function playBgAudio(){
   bgAudio.play().catch(()=>{});
   if(audioUnlocked) fadeAudio(BG_VOLUME, FADE_MS);
