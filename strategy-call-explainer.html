@@ -556,6 +556,10 @@ let fadeRAF = null;
 function fadeAudio(toVolume, duration, onDone){
   cancelAnimationFrame(fadeRAF);
   const fromVolume = bgAudio.volume;
+  if(fromVolume === toVolume){
+    if(onDone) onDone();
+    return;
+  }
   const startTime = performance.now();
   (function step(now){
     const t = Math.min(1, (now - startTime) / duration);
@@ -573,10 +577,20 @@ function unlockBgAudio(){
   if(audioUnlocked) return;
   audioUnlocked = true;
   bgAudio.muted = false;
-  if(bgAudio.paused && playing){
-    bgAudio.play().catch(()=>{});
-  }
-  if(playing) fadeAudio(BG_VOLUME, FADE_MS);
+  // Just unmuting isn't enough by itself: if this interaction was a
+  // click on the Pause button, that click's own handler is about to
+  // run right after this and set `playing = false` — fading in now
+  // would just get immediately faded back out by pauseBgAudio(),
+  // which looked like "nothing happened" on the first click. Defer
+  // to a fresh macrotask so any click handler for this same
+  // interaction finishes first and `playing` reflects the real,
+  // final state before we decide whether to fade in.
+  setTimeout(()=>{
+    if(playing){
+      if(bgAudio.paused) bgAudio.play().catch(()=>{});
+      fadeAudio(BG_VOLUME, FADE_MS);
+    }
+  }, 0);
 }
 ['pointerdown','keydown','touchstart'].forEach(function(evt){
   document.addEventListener(evt, unlockBgAudio, { once:true, capture:true });
