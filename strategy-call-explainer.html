@@ -44,7 +44,7 @@
     align-items:center;
     justify-content:center;
     width:100%;
-    padding:120px 24px;
+    padding:0;
     box-sizing:border-box;
   }
   .stage-wrap{
@@ -74,7 +74,7 @@
     align-items:center;
     justify-content:center;
     text-align:center;
-    padding:7% 10%;
+    padding:120px 10%;
     opacity:0;
     transform:translateY(14px);
     transition:opacity .5s ease, transform .5s ease;
@@ -254,9 +254,29 @@
   }
   button:hover{border-color:var(--red);color:var(--red);}
 
-  /* ---- Tablet + mobile: shrink paragraph/bullet text (top/bottom
-     page padding stays a fixed 120px at every viewport size) ---- */
+  /* ---- Tablet + mobile: card auto-sizes to its content (instead of
+     the fixed desktop aspect-ratio) so the fixed 120px top/bottom
+     padding always has room and never gets clipped; text shrinks to
+     18px. Scenes swap instantly here instead of cross-fading, since
+     the card's height now depends on which one is showing. ---- */
   @container stage (max-width: 1024px){
+    .frame{
+      aspect-ratio:auto;
+      min-height:auto;
+    }
+    .scene{
+      position:relative;
+      inset:auto;
+      display:none;
+      padding:120px 7%;
+      opacity:1;
+      transform:none;
+      pointer-events:none;
+    }
+    .scene.active{
+      display:flex;
+      pointer-events:auto;
+    }
     .subtext{
       font-size:18px;
       max-width:none;
@@ -266,26 +286,9 @@
     }
   }
 
-  /* ---- Mobile responsive stacking layout ---- */
+  /* ---- Mobile: stack the split scenes (text above visual) instead
+     of side-by-side ---- */
   @container stage (max-width: 680px){
-    body{padding-left:12px; padding-right:12px;}
-    .frame{
-      aspect-ratio:auto;
-      min-height:auto;
-    }
-    .scene{
-      position:relative;
-      inset:auto;
-      display:none;
-      padding:9% 7%;
-      opacity:1;
-      transform:none;
-      pointer-events:none;
-    }
-    .scene.active{
-      display:flex;
-      pointer-events:auto;
-    }
     .scene.split{
       flex-direction:column;
       align-items:center;
@@ -410,7 +413,7 @@
     <button id="restartBtn">Restart</button>
   </div>
 
-  <audio id="bgAudio" src="https://mab-git22.github.io/mab-concepts/audio/explainer-audio-bgsound.mp3" preload="auto"></audio>
+  <audio id="bgAudio" src="https://mab-git22.github.io/mab-concepts/audio/explainer-audio-bgsound.mp3" preload="auto" muted playsinline></audio>
 </div>
 
 <script>
@@ -534,11 +537,20 @@ document.getElementById('restartBtn').addEventListener('click', ()=>{
 });
 
 /* ---- Background audio: fade in on start, fade out at the end, no
-   looping. Volume is capped at 50%. ---- */
+   looping. Volume is capped at 50%.
+
+   Browsers block unmuted autoplay everywhere (and especially inside
+   an iframe embed) until the visitor interacts with the page at
+   least once — no script can override that. The standard workaround:
+   start the track muted (muted autoplay is always allowed) so it's
+   already rolling in sync with the slideshow, then unmute + fade in
+   on the visitor's very first interaction anywhere on the page —
+   not just the Restart button. ---- */
 const bgAudio = document.getElementById('bgAudio');
 const BG_VOLUME = 0.5;   // 50%
 const FADE_MS = 1500;
 bgAudio.volume = 0;
+bgAudio.muted = true;
 
 let fadeRAF = null;
 function fadeAudio(toVolume, duration, onDone){
@@ -556,32 +568,47 @@ function fadeAudio(toVolume, duration, onDone){
   })(startTime);
 }
 
-function playBgAudio(){
-  const p = bgAudio.play();
-  if(p && p.catch){
-    p.catch(()=>{
-      // Autoplay blocked by the browser — start on the first
-      // interaction instead (common in iframes/embeds).
-      const resume = ()=>{ bgAudio.play().catch(()=>{}); };
-      document.addEventListener('pointerdown', resume, { once:true });
-      document.addEventListener('keydown', resume, { once:true });
-    });
+let audioUnlocked = false;
+function unlockBgAudio(){
+  if(audioUnlocked) return;
+  audioUnlocked = true;
+  bgAudio.muted = false;
+  if(bgAudio.paused && playing){
+    bgAudio.play().catch(()=>{});
   }
-  fadeAudio(BG_VOLUME, FADE_MS);
+  if(playing) fadeAudio(BG_VOLUME, FADE_MS);
+}
+['pointerdown','keydown','touchstart'].forEach(function(evt){
+  document.addEventListener(evt, unlockBgAudio, { once:true, capture:true });
+});
+
+function playBgAudio(){
+  bgAudio.play().catch(()=>{});
+  if(audioUnlocked) fadeAudio(BG_VOLUME, FADE_MS);
 }
 
 function pauseBgAudio(){
-  fadeAudio(0, FADE_MS, ()=>{ bgAudio.pause(); });
+  if(audioUnlocked){
+    fadeAudio(0, FADE_MS, ()=>{ bgAudio.pause(); });
+  } else {
+    bgAudio.pause();
+  }
 }
 
 function stopBgAudioForEnd(){
-  fadeAudio(0, FADE_MS, ()=>{ bgAudio.pause(); });
+  if(audioUnlocked){
+    fadeAudio(0, FADE_MS, ()=>{ bgAudio.pause(); });
+  } else {
+    bgAudio.pause();
+  }
 }
 
 function restartBgAudio(){
   bgAudio.pause();
   bgAudio.currentTime = 0;
   bgAudio.volume = 0;
+  audioUnlocked = true;   // clicking Restart is itself a user gesture
+  bgAudio.muted = false;
   playBgAudio();
 }
 
