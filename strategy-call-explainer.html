@@ -289,11 +289,6 @@
     50%{ box-shadow:0 6px 22px -4px rgba(193,68,60,0.35); }
   }
 
-  /* ---- Tablet + mobile: card auto-sizes to its content (instead of
-     the fixed desktop aspect-ratio) so the fixed 120px top/bottom
-     padding always has room and never gets clipped; text shrinks to
-     18px. Scenes swap instantly here instead of cross-fading, since
-     the card's height now depends on which one is showing. ---- */
   @container stage (max-width: 1024px){
     .frame{
       aspect-ratio:auto;
@@ -392,13 +387,6 @@
       <div class="split-text">
         <h1 class="headline">But most businesses lose them somewhere between the <span class="leakword">first click</span> and the <span class="accentword">first conversation</span>.</h1>
       </div>
-      <!--
-        PHOTO GOES HERE: this artifact must stay a single self-contained file,
-        so no live/external photo can be embedded automatically. Swap the src
-        below for a base64 data URI of your own photo (e.g. a phone ringing
-        unanswered, or a lead notification going ignored) and it will render
-        exactly where this placeholder sits.
-      -->
       <div class="split-visual">
         <div class="photo-frame">
           <img src="https://mab-git22.github.io/mab-concepts/images/funnel-illustration.png" alt="Funnel illustration showing 100 people at the first click narrowing down to 2-3 people at the first conversation, a 90% drop-off">
@@ -572,19 +560,9 @@ document.getElementById('restartBtn').addEventListener('click', ()=>{
   restartBgAudio();
 });
 
-/* ---- Background audio: fade in on start, fade out at the end, no
-   looping. Volume is capped at 50%.
-
-   Browsers block unmuted autoplay everywhere (and especially inside
-   an iframe embed) until the visitor interacts with the page at
-   least once — no script can override that. The standard workaround:
-   start the track muted (muted autoplay is always allowed) so it's
-   already rolling in sync with the slideshow, then unmute + fade in
-   on the visitor's very first interaction anywhere on the page —
-   not just the Restart button. ---- */
 const bgAudio = document.getElementById('bgAudio');
-const BG_VOLUME = 0.5;   // 50%
-const FADE_MS = 1500;
+const BG_VOLUME = 0.3;
+const FADE_MS = 1200;
 bgAudio.volume = 0;
 bgAudio.muted = true;
 
@@ -619,14 +597,7 @@ function unlockBgAudio(){
   audioUnlocked = true;
   bgAudio.muted = false;
   hideSoundHint();
-  // Just unmuting isn't enough by itself: if this interaction was a
-  // click on the Pause button, that click's own handler is about to
-  // run right after this and set `playing = false` — fading in now
-  // would just get immediately faded back out by pauseBgAudio(),
-  // which looked like "nothing happened" on the first click. Defer
-  // to a fresh macrotask so any click handler for this same
-  // interaction finishes first and `playing` reflects the real,
-  // final state before we decide whether to fade in.
+ 
   setTimeout(()=>{
     if(playing){
       if(bgAudio.paused) bgAudio.play().catch(()=>{});
@@ -638,10 +609,6 @@ function unlockBgAudio(){
   document.addEventListener(evt, unlockBgAudio, { once:true, capture:true });
 });
 
-// Also unlock when the *parent* page reports an interaction — a click
-// on the surrounding GHL page never reaches this document directly
-// (events don't cross the iframe boundary), so the embed snippet
-// relays it here via postMessage. See _strategy-call-embed-snippet.html.
 window.addEventListener('message', function(e){
   if(!e.data || e.data.type !== 'mab-strategy-unlock-audio') return;
   unlockBgAudio();
@@ -681,10 +648,6 @@ function restartBgAudio(){
 start();
 playBgAudio();
 
-/* ---- Embeddable-page support: report height to parent when framed ----
-   Uses the same postMessage contract ({type:'iframeHeight', height})
-   as the portfolio embed, so the same GHL embed snippet pattern works
-   here unchanged. ---- */
 (function(){
   if(window.self === window.top) return; // not embedded, nothing to do
 
