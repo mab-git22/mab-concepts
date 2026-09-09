@@ -254,6 +254,41 @@
   }
   button:hover{border-color:var(--red);color:var(--red);}
 
+  .sound-hint{
+    position:absolute;
+    right:clamp(10px,2.4cqw,20px);
+    bottom:clamp(10px,2.4cqw,20px);
+    z-index:5;
+    display:flex;
+    align-items:center;
+    gap:6px;
+    font-family:"Mona Sans Display","Helvetica Neue",Arial,sans-serif;
+    font-weight:600;
+    font-size:clamp(11px,1.2cqw,13px);
+    letter-spacing:.01em;
+    color:var(--ink);
+    background:rgba(255,255,255,0.94);
+    border:1px solid var(--line);
+    border-radius:999px;
+    padding:8px 14px;
+    box-shadow:0 6px 18px -6px rgba(0,0,0,0.25);
+    cursor:pointer;
+    opacity:1;
+    transform:translateY(0);
+    transition:opacity .4s ease, transform .4s ease;
+    animation:soundHintPulse 2.6s ease-in-out infinite;
+  }
+  .sound-hint:hover{border-color:var(--accent);color:var(--accent);}
+  .sound-hint.hidden{
+    opacity:0;
+    transform:translateY(6px);
+    pointer-events:none;
+  }
+  @keyframes soundHintPulse{
+    0%, 100%{ box-shadow:0 6px 18px -6px rgba(0,0,0,0.25); }
+    50%{ box-shadow:0 6px 22px -4px rgba(193,68,60,0.35); }
+  }
+
   /* ---- Tablet + mobile: card auto-sizes to its content (instead of
      the fixed desktop aspect-ratio) so the fixed 120px top/bottom
      padding always has room and never gets clipped; text shrinks to
@@ -404,6 +439,7 @@
       <img class="logo-big" src="https://mab-git22.github.io/mab-concepts/images/mabconcepts-logo-white-text.png" alt="MAB Concepts">
     </div>
 
+    <button type="button" id="soundHint" class="sound-hint" aria-label="Tap to turn on sound">🔊 Tap for sound</button>
   </div>
 
   <div class="progress-row" id="progressRow"></div>
@@ -573,10 +609,16 @@ function fadeAudio(toVolume, duration, onDone){
 }
 
 let audioUnlocked = false;
+const soundHint = document.getElementById('soundHint');
+function hideSoundHint(){
+  if(soundHint) soundHint.classList.add('hidden');
+}
+
 function unlockBgAudio(){
   if(audioUnlocked) return;
   audioUnlocked = true;
   bgAudio.muted = false;
+  hideSoundHint();
   // Just unmuting isn't enough by itself: if this interaction was a
   // click on the Pause button, that click's own handler is about to
   // run right after this and set `playing = false` — fading in now
@@ -619,6 +661,7 @@ function pauseBgAudio(){
 }
 
 function stopBgAudioForEnd(){
+  hideSoundHint();
   if(audioUnlocked){
     fadeAudio(0, FADE_MS, ()=>{ bgAudio.pause(); });
   } else {
